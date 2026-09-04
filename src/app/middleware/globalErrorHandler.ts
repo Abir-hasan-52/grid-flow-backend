@@ -6,6 +6,7 @@ import { AppError } from "../utils/AppError";
 import { Prisma } from "../../../generated/prisma/client";
 
 export const globalErrorHandler = async (
+	 
 	err: any,
 	_req: Request,
 	res: Response,
@@ -47,10 +48,9 @@ export const globalErrorHandler = async (
 	} else if (err instanceof Prisma.PrismaClientUnknownRequestError) {
 		statusCode = httpStatus.INTERNAL_SERVER_ERROR;
 		errorMessage = "Error occurred during query execution";
-	} else if( err instanceof AppError){
-		errorMessage = err.message
-		statusCode = err.statusCode
-
+	} else if (err instanceof AppError) {
+		errorMessage = err.message;
+		statusCode = err.statusCode;
 	} else if (err instanceof Error) {
 		errorMessage = err.message;
 	}

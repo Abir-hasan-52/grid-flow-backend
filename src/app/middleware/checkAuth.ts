@@ -7,7 +7,7 @@ import { prisma } from "../lib/prisma";
 // import { AppError } from "../utils/AppError";
 import { catchAsync } from "../utils/catchAsync";
 import { jwtUtils } from "../utils/jwt";
-import { Role } from "../../../generated/prisma/enums";
+import type { Role } from "../../../generated/prisma/enums";
 import { AppError } from "../utils/AppError";
 
 export interface RequestUser {
@@ -67,7 +67,10 @@ export const auth = (...requiredRoles: Role[]) => {
 		});
 
 		if (!user) {
-			throw new AppError(httpStatus.UNAUTHORIZED, "User not found. Please log in again.");
+			throw new AppError(
+				httpStatus.UNAUTHORIZED,
+				"User not found. Please log in again.",
+			);
 		}
 
 		if (user.status === "SUSPENDED") {
