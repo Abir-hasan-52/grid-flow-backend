@@ -1,0 +1,89 @@
+enum AuthProvider {
+    GOOGLE
+    CREDENTIAL
+}
+
+enum Role {
+    CUSTOMER
+    TECHNICIAN
+    ZONE_MANAGER
+    ADMIN
+}
+
+enum UserStatus {
+    ACTIVE
+    SUSPENDED
+    DELETED
+}
+
+enum ScheduleStatus {
+    DRAFT
+    PENDING
+    APPROVED
+    ACTIVE
+    COMPLETED
+    CANCELLED
+}
+
+enum OutageStatus {
+    REPORTED
+    VERIFIED
+    ASSIGNED
+    IN_PROGRESS
+    RESTORED
+    CLOSED
+}
+
+enum AssignmentStatus {
+    PENDING
+    ACCEPTED
+    REJECTED
+    IN_PROGRESS
+    COMPLETED
+}
+
+enum PaymentStatus {
+    PENDING
+    VERIFIED
+    FAILED
+    REFUNDED
+}
+
+enum PaymentMethod {
+    BKASH
+    NAGAD
+    ROCKET
+    CARD
+}
+
+enum PriorityRequestStatus {
+    PENDING
+    APPROVED
+    REJECTED
+}
+
+enum EmailType {
+    SCHEDULE_NOTIFICATION
+    OUTAGE_UPDATE
+    PRIORITY_CONFIRMATION
+    EMAIL_VERIFICATION
+    PASSWORD_RESET
+    ACCOUNT
+    GENERAL
+}
+
+enum EmailStatus {
+    QUEUED
+    SENT
+    FAILED
+}
+
+enum AuditAction {
+    CREATE
+    UPDATE
+    DELETE
+    APPROVE
+    REJECT
+    VERIFY
+    ASSIGN
+}

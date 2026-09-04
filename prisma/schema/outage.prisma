@@ -1,0 +1,23 @@
+model Outage {
+  id        String       @id @default(cuid())
+  status    OutageStatus @default(REPORTED)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  closedAt  DateTime?
+
+  feederId String
+  feeder   Feeder @relation(fields: [feederId], references: [id])
+
+  // Zone Manager verifies the (merged) report
+  verifiedById String?
+  verifiedBy   User?   @relation("OutageVerifiedBy", fields: [verifiedById], references: [id])
+  verifiedAt   DateTime?
+
+  reports     OutageReport[]
+  assignments TechnicianAssignment[]
+  priorityRequests PriorityRestorationRequest[]
+
+  @@index([feederId])
+  @@index([status])
+  @@index([verifiedById])
+}

@@ -1,0 +1,14 @@
+model Area {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  feederId String
+  feeder   Feeder @relation(fields: [feederId], references: [id])
+
+  customers User[]
+  schedules LoadSheddingSchedule[]
+
+  @@index([feederId])
+}

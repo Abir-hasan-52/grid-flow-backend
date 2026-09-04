@@ -1,0 +1,15 @@
+model EmailLog {
+  id      String      @id @default(cuid())
+  type    EmailType
+  subject String
+  status  EmailStatus @default(QUEUED)
+  sentAt  DateTime?
+  error   String?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@index([type])
+}

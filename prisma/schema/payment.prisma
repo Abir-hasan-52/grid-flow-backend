@@ -1,0 +1,18 @@
+model Payment {
+  id            String        @id @default(cuid())
+  amount        Decimal       @db.Decimal(10, 2)
+  method        PaymentMethod @default(BKASH)
+  status        PaymentStatus @default(PENDING)
+  transactionId String?       @unique
+  createdAt     DateTime      @default(now())
+  verifiedAt    DateTime?
+
+  customerId String
+  customer   User   @relation(fields: [customerId], references: [id])
+
+  priorityRequestId String                     @unique
+  priorityRequest   PriorityRestorationRequest @relation(fields: [priorityRequestId], references: [id])
+
+  @@index([customerId])
+  @@index([status])
+}

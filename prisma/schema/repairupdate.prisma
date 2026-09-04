@@ -1,0 +1,14 @@
+model RepairUpdate {
+  id        String   @id @default(cuid())
+  note      String
+  createdAt DateTime @default(now())
+
+  assignmentId String
+  assignment   TechnicianAssignment @relation(fields: [assignmentId], references: [id])
+
+  technicianId String
+  technician   User   @relation(fields: [technicianId], references: [id])
+
+  @@index([assignmentId])
+  @@index([technicianId])
+}

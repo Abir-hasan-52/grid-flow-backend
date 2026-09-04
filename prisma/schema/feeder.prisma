@@ -1,0 +1,14 @@
+model Feeder {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  substationId String
+  substation   Substation @relation(fields: [substationId], references: [id])
+
+  areas    Area[]
+  outages  Outage[]
+
+  @@index([substationId])
+}

@@ -1,0 +1,29 @@
+model LoadSheddingSchedule {
+  id          String         @id @default(cuid())
+  title       String
+  reason      String?
+  startTime   DateTime
+  endTime     DateTime
+  status      ScheduleStatus @default(DRAFT)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  powerZoneId String
+  powerZone   PowerZone @relation(fields: [powerZoneId], references: [id])
+
+  // Zone Manager creates
+  createdById String
+  createdBy   User   @relation("ScheduleCreatedBy", fields: [createdById], references: [id])
+
+  // Admin approves (nullable until approved)
+  approvedById String?
+  approvedBy   User?   @relation("ScheduleApprovedBy", fields: [approvedById], references: [id])
+  approvedAt   DateTime?
+
+  areas Area[]
+
+  @@index([powerZoneId])
+  @@index([status])
+  @@index([createdById])
+  @@index([approvedById])
+}

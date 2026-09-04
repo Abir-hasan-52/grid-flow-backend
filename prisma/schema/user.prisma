@@ -1,0 +1,54 @@
+model User {
+  id        String     @id @default(cuid())
+  name      String
+  email     String     @unique
+  phone     String?    @unique
+  password  String?
+  role      Role       @default(CUSTOMER)
+  isActive  Boolean    @default(true)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  status    UserStatus @default(ACTIVE)
+
+  //  Auth 
+  authProvider    AuthProvider @default(CREDENTIAL)
+  googleId        String?      @unique
+  emailVerified   Boolean      @default(false)
+  emailVerifiedAt DateTime?
+
+  // ZONE_MANAGER only: zone(s) this user manages
+  managedZoneId String?
+  managedZone   PowerZone? @relation("ZoneManager", fields: [managedZoneId], references: [id])
+
+  // CUSTOMER: which area they live in (for schedule notification targeting)
+  areaId String?
+  area   Area?   @relation(fields: [areaId], references: [id])
+
+  // relations: LoadSheddingSchedule
+  createdSchedules  LoadSheddingSchedule[] @relation("ScheduleCreatedBy")
+  approvedSchedules LoadSheddingSchedule[] @relation("ScheduleApprovedBy")
+
+  // relations: Outage
+  outageReports   OutageReport[]
+  verifiedOutages Outage[]       @relation("OutageVerifiedBy")
+
+  // relations: TechnicianAssignment
+  assignmentsGiven    TechnicianAssignment[] @relation("AssignedBy")
+  assignmentsReceived TechnicianAssignment[] @relation("AssignedTechnician")
+
+  // relations: RepairUpdate (technician logs progress)
+  repairUpdates RepairUpdate[]
+
+  // relations: Priority + Payment (customer)
+  priorityRequests PriorityRestorationRequest[]
+  payments         Payment[]
+
+  // relations: logs
+  emailLogs EmailLog[]
+  auditLogs AuditLog[]
+
+  @@index([role])
+  @@index([managedZoneId])
+  @@index([areaId])
+  @@index([googleId])
+}

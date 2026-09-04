@@ -1,0 +1,14 @@
+model OutageReport {
+  id          String   @id @default(cuid())
+  description String?
+  createdAt   DateTime @default(now())
+
+  customerId String
+  customer   User   @relation(fields: [customerId], references: [id])
+
+  outageId String
+  outage   Outage @relation(fields: [outageId], references: [id])
+
+  @@index([customerId])
+  @@index([outageId])
+}
