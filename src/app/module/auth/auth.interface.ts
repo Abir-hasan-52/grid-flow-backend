@@ -19,3 +19,7 @@ export interface IRequestUser {
 	name: string;
 	role: Role;
 }
+
+export interface IGoogleLoginPayload {
+    googleId: string;
+}
