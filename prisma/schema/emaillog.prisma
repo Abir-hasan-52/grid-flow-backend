@@ -1,5 +1,5 @@
 model EmailLog {
-  id      String      @id @default(cuid())
+  id      String      @id @default(uuid())
   type    EmailType
   subject String
   status  EmailStatus @default(QUEUED)

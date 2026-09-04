@@ -1,5 +1,5 @@
 model PriorityRestorationRequest {
-  id        String                 @id @default(cuid())
+  id        String                 @id @default(uuid())
   reason    String?
   status    PriorityRequestStatus  @default(PENDING)
   createdAt DateTime               @default(now())

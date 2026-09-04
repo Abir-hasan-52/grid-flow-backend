@@ -1,4 +1,5 @@
 /** biome-ignore-all assist/source/organizeImports: <explanation> */
+/** biome-ignore-all lint/style/useImportType: <explanation> */
 import bcrypt from "bcryptjs";
 import type { JwtPayload, SignOptions } from "jsonwebtoken";
 import config from "../../config";

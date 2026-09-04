@@ -1,5 +1,5 @@
 model Outage {
-  id        String       @id @default(cuid())
+  id        String       @id @default(uuid())
   status    OutageStatus @default(REPORTED)
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt

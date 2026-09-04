@@ -1,5 +1,5 @@
 model TechnicianAssignment {
-  id        String           @id @default(cuid())
+  id        String           @id @default(uuid())
   status    AssignmentStatus @default(PENDING)
   isPriority Boolean         @default(false)
   createdAt DateTime         @default(now())

@@ -1,5 +1,5 @@
 model Payment {
-  id            String        @id @default(cuid())
+  id            String        @id @default(uuid())
   amount        Decimal       @db.Decimal(10, 2)
   method        PaymentMethod @default(BKASH)
   status        PaymentStatus @default(PENDING)

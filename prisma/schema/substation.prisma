@@ -1,8 +1,9 @@
 model Substation {
-  id        String   @id @default(cuid())
+  id        String   @id @default(uuid())
   name      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  deletedAt DateTime?
 
   powerZoneId String
   powerZone   PowerZone @relation(fields: [powerZoneId], references: [id])

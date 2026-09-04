@@ -1,5 +1,5 @@
 model RepairUpdate {
-  id        String   @id @default(cuid())
+  id        String   @id @default(uuid())
   note      String
   createdAt DateTime @default(now())
 

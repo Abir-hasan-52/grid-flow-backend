@@ -1,8 +1,9 @@
 model PowerZone {
-  id        String   @id @default(cuid())
+  id        String   @id @default(uuid())
   name      String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  deletedAt DateTime?
 
   managers     User[]        @relation("ZoneManager")
   substations  Substation[]

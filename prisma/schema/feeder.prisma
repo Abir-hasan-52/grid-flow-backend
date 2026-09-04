@@ -1,8 +1,9 @@
 model Feeder {
-  id        String   @id @default(cuid())
+  id        String   @id @default(uuid())
   name      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  deletedAt DateTime?
 
   substationId String
   substation   Substation @relation(fields: [substationId], references: [id])

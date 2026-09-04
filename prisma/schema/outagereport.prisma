@@ -1,7 +1,8 @@
 model OutageReport {
-  id          String   @id @default(cuid())
+  id          String   @id @default(uuid())
   description String?
   createdAt   DateTime @default(now())
+  deletedAt   DateTime?
 
   customerId String
   customer   User   @relation(fields: [customerId], references: [id])
