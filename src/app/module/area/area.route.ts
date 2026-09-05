@@ -1,9 +1,9 @@
 import { Router } from "express";
 import { AreaController } from "./area.controller";
 import { AreaValidation } from "./area.validation";
-import { auth } from "../../../middleware/checkAuth";
-import { Role } from "../../../../../generated/prisma/enums";
-import { validateRequest } from "../../../middleware/validateRequest";
+import { auth } from "../../middleware/checkAuth";
+import { Role } from "../../../../generated/prisma/enums";
+import { validateRequest } from "../../middleware/validateRequest";
 
 const router = Router();
 

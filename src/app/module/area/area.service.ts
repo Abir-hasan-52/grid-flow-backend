@@ -5,8 +5,9 @@ import type {
 	IGetAllAreasQuery,
 	IUpdateAreaPayload,
 } from "./area.interface";
-import { AppError } from "../../../utils/AppError";
-import { prisma } from "../../../lib/prisma";
+import { prisma } from "../../lib/prisma";
+import { AppError } from "../../utils/AppError";
+ 
 
 const createArea = async (payload: ICreateAreaPayload) => {
 	// Check whether feeder exists (and is not soft-deleted)

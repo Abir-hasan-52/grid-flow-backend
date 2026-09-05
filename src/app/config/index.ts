@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/style/noNonNullAssertion: <explanation> */
 import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
 import path from "path";
@@ -34,4 +35,9 @@ export default {
 	customer_name: process.env.CUSTOMER_NAME!,
 	customer_email: process.env.CUSTOMER_EMAIL!,
 	customer_password: process.env.CUSTOMER_PASSWORD!,
+
+	redis_user: process.env.REDIS_USER!,
+	redis_password: process.env.REDIS_PASSWORD!,
+	redis_port: process.env.REDIS_PORT!,
+	redis_host: process.env.REDIS_HOST!,
 };

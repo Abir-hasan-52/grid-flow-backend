@@ -14,8 +14,8 @@ import { AuthRoutes } from "./app/module/auth/auth.route";
 import { ZoneRoutes } from "./app/module/zone/zone.route";
 import { SubstationRoutes } from "./app/module/substation/substation.route";
 import { FeederRoutes } from "./app/module/feeder/feeder.route";
-import { AreaRoutes } from "./app/module/feeder/area/area.route";
-// import { AuthRoutes } from './app/module/auth/auth.route'
+import { AreaRoutes } from "./app/module/area/area.route";
+ 
 
 const app: Application = express();
 
