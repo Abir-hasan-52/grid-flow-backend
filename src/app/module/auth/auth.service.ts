@@ -5,7 +5,8 @@ import type { JwtPayload, SignOptions } from "jsonwebtoken";
 import config from "../../config";
 import { prisma } from "../../lib/prisma";
 import { jwtUtils } from "../../utils/jwt";
-import cypto from "crypto";
+import crypto from "crypto";
+import ejs from "ejs";
 import type {
   IForgotPasswordPayload,
   IGoogleLoginPayload,
@@ -16,6 +17,8 @@ import type {
 } from "./auth.interface";
 import {
   AuthProvider,
+  EmailStatus,
+  EmailType,
   Role,
   UserStatus,
 } from "../../../../generated/prisma/enums";
@@ -24,6 +27,8 @@ import { TokenPayload } from "google-auth-library";
 import { AppError } from "../../utils/AppError";
 import httpStatus from "http-status";
 import { redisClient } from "../../lib/redis";
+import { transporter } from "../../lib/nodemailer";
+import path from "path";
 
 const registerPatient = async (payload: IRegisterPatientPayload) => {
   const { name, password } = payload;
@@ -322,14 +327,15 @@ const googleLogin = async (payload: IGoogleLoginPayload) => {
 
 const forgotPassword = async (payload: IForgotPasswordPayload) => {
   const { email } = payload;
+ 
   const isUserExist = await prisma.user.findUnique({
     where: { email },
   });
-
+ 
   if (!isUserExist) {
     throw new AppError(httpStatus.NOT_FOUND, "User not found");
   }
-
+ 
   if (isUserExist.status === UserStatus.SUSPENDED) {
     throw new AppError(httpStatus.FORBIDDEN, "User is suspended");
   }
@@ -351,26 +357,79 @@ const forgotPassword = async (payload: IForgotPasswordPayload) => {
       "User registered with Google login. Please use Google login.",
     );
   }
-
-  const otp = cypto.randomInt(100000, 1000000).toString();
+ 
+  const otp = crypto.randomInt(100000, 1000000).toString();
   const key = `forgot-password-${isUserExist.email}`;
+ 
   await redisClient.set(key, otp, {
     expiration: {
       type: "EX",
       value: 5 * 60, // 5 minutes
     },
   });
+ 
+  const subject = "Reset your GridFlow password";
+  const templatePath = path.join(
+    process.cwd(),
+    "src/app/templates/forgot-password.ejs",
+  );
+  const html = await ejs.renderFile(templatePath, {
+    otp,
+    userName: isUserExist.name,
+    expiresInMinutes: 5,
+  });
+ 
+  // Email sending is wrapped so a failure is logged (not silently swallowed)
+  // and the user gets a clear error instead of an unhandled crash.
+  try {
+    await transporter.sendMail({
+      from: config.email_sender,
+      to: isUserExist.email,
+      subject,
+      html,
+    });
+ 
+    await prisma.emailLog.create({
+      data: {
+        userId: isUserExist.id,
+        type: EmailType.PASSWORD_RESET,
+        subject,
+        status: EmailStatus.SENT,
+        sentAt: new Date(),
+      },
+    });
+  } catch (error) {
+    await prisma.emailLog.create({
+      data: {
+        userId: isUserExist.id,
+        type: EmailType.PASSWORD_RESET,
+        subject,
+        status: EmailStatus.FAILED,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unknown error while sending OTP email",
+      },
+    });
+ 
+    throw new AppError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      "Failed to send OTP email. Please try again.",
+    );
+  }
 };
+
 const resetPassword = async (payload: IResetPasswordPayload) => {
   const { email, otp, newPassword } = payload;
+ 
   const isUserExist = await prisma.user.findUnique({
     where: { email },
   });
-
+ 
   if (!isUserExist) {
     throw new AppError(httpStatus.NOT_FOUND, "User not found");
   }
-
+ 
   if (isUserExist.status === UserStatus.SUSPENDED) {
     throw new AppError(httpStatus.FORBIDDEN, "User is suspended");
   }
@@ -392,9 +451,10 @@ const resetPassword = async (payload: IResetPasswordPayload) => {
       "User registered with Google login. Please use Google login.",
     );
   }
+ 
   const key = `forgot-password-${isUserExist.email}`;
-
   const existingRedisOtp = await redisClient.get(key);
+ 
   // If the OTP is not found in Redis, it means it has expired
   if (!existingRedisOtp) {
     throw new AppError(httpStatus.BAD_REQUEST, "OTP expired or not found");
@@ -402,15 +462,14 @@ const resetPassword = async (payload: IResetPasswordPayload) => {
   if (existingRedisOtp !== otp) {
     throw new AppError(httpStatus.BAD_REQUEST, "Invalid OTP");
   }
+ 
   const hashedPassword = await bcrypt.hash(
     newPassword,
     Number(config.bcrypt_salt_rounds),
   );
-
-  const updatedUser = await prisma.user.update({
-    where: {
-      email,
-    },
+ 
+    await prisma.user.update({
+    where: { email },
     data: {
       password: hashedPassword,
     },
@@ -418,10 +477,59 @@ const resetPassword = async (payload: IResetPasswordPayload) => {
       password: true,
     },
   });
-
+ 
   // Delete the OTP from Redis after successful password reset
   await redisClient.del([key]);
-
+ 
+  // Send a "your password was changed" confirmation email.
+  // This runs AFTER the password is already updated, so a failure here
+  // must NOT throw -- the reset itself already succeeded.
+  const subject = "Your GridFlow password was changed";
+  try {
+    const templatePath = path.join(
+      process.cwd(),
+      "src/app/templates/password-changed.ejs",
+    );
+    const html = await ejs.renderFile(templatePath, {
+      userName: isUserExist.name,
+      email: isUserExist.email,
+      changedAt: new Date().toLocaleString("en-BD", {
+        timeZone: "Asia/Dhaka",
+      }),
+    });
+ 
+    await transporter.sendMail({
+      from: config.email_sender,
+      to: isUserExist.email,
+      subject,
+      html,
+    });
+ 
+    await prisma.emailLog.create({
+      data: {
+        userId: isUserExist.id,
+        type: EmailType.ACCOUNT,
+        subject,
+        status: EmailStatus.SENT,
+        sentAt: new Date(),
+      },
+    });
+  } catch (error) {
+    // Log the failure but don't throw password reset already succeeded.
+    await prisma.emailLog.create({
+      data: {
+        userId: isUserExist.id,
+        type: EmailType.ACCOUNT,
+        subject,
+        status: EmailStatus.FAILED,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unknown error while sending confirmation email",
+      },
+    });
+  }
+ 
   
 };
 

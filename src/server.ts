@@ -1,6 +1,7 @@
 // import { Prisma } from "@prisma/client/extension";
 import app from "./app";
 import config from "./app/config";
+import { transporter } from "./app/lib/nodemailer";
 import { prisma } from "./app/lib/prisma";
 import { redisClient } from "./app/lib/redis";
 import { seedAdmin, seedDemoUsers, seedInfrastructure } from "./app/utils/seed";
@@ -13,6 +14,8 @@ const main = async () => {
 		console.log("Connected to the database successfully.");
 		await redisClient.connect();
 		console.log("Connected to Redis successfully.");
+		await transporter.verify();
+		console.log("Connected nodemailer to SMTP server successfully.");
 
 		// Seed the database with initial data
 		await seedAdmin();
