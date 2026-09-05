@@ -10,7 +10,7 @@ const main = async () => {
 	try {
 		await prisma.$connect();
 		console.log("Connected to the database successfully.");
-		
+
 		await seedAdmin();
 		await seedInfrastructure();
 		await seedDemoUsers();

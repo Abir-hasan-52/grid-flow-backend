@@ -9,29 +9,29 @@ import { ZoneController } from "./zone.controller";
 const router = Router();
 
 router.post(
-  "/create-zone",
-    auth(Role.ADMIN),
-  validateRequest(ZoneValidation.createZoneSchema),
-  ZoneController.createZone,
+	"/create-zone",
+	auth(Role.ADMIN),
+	validateRequest(ZoneValidation.createZoneSchema),
+	ZoneController.createZone,
 );
 
 router.get(
-  "/all-zones",
-  auth(Role.ADMIN, Role.ZONE_MANAGER),
-  ZoneController.getAllZones,
+	"/all-zones",
+	auth(Role.ADMIN, Role.ZONE_MANAGER),
+	ZoneController.getAllZones,
 );
 
 router.get(
-  "/get-zone/:id",
-  auth(Role.ADMIN, Role.ZONE_MANAGER),
-  ZoneController.getZoneById,
+	"/get-zone/:id",
+	auth(Role.ADMIN, Role.ZONE_MANAGER),
+	ZoneController.getZoneById,
 );
 
 router.patch(
-  "/update-zone/:id",
-  auth(Role.ADMIN),
-  validateRequest(ZoneValidation.updateZoneSchema),
-  ZoneController.updateZone,
+	"/update-zone/:id",
+	auth(Role.ADMIN),
+	validateRequest(ZoneValidation.updateZoneSchema),
+	ZoneController.updateZone,
 );
 
 router.delete("/delete-zone/:id", auth(Role.ADMIN), ZoneController.deleteZone);

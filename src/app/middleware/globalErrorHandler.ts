@@ -6,7 +6,6 @@ import { AppError } from "../utils/AppError";
 import { Prisma } from "../../../generated/prisma/client";
 
 export const globalErrorHandler = async (
-	 
 	err: any,
 	_req: Request,
 	res: Response,

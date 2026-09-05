@@ -10,9 +10,9 @@ const router = Router();
 router.post("/register", AuthController.registerPatient);
 router.post("/login", AuthController.loginUser);
 router.get(
-  "/me",
-  auth(Role.ADMIN, Role.CUSTOMER, Role.TECHNICIAN, Role.ZONE_MANAGER),
-  AuthController.getMe,
+	"/me",
+	auth(Role.ADMIN, Role.CUSTOMER, Role.TECHNICIAN, Role.ZONE_MANAGER),
+	AuthController.getMe,
 );
 router.post("/refresh-token", AuthController.refreshToken);
 
