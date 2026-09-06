@@ -1,31 +1,21 @@
+import { Role } from "../../../../generated/prisma/enums";
 import { cloudinary } from "../../lib/cloudinary";
 import { prisma } from "../../lib/prisma";
 import { AppError } from "../../utils/AppError";
 import httpStatus from "http-status";
+import type { IUpdateMyProfilePayload } from "./user.interface";
+import type { IRequestUser } from "../auth/auth.interface";
 
-const uploadProfileImage = async (
-  buffer: Buffer,
-  userId: string,
-) => {
-  // 1. Check user exists
+const uploadProfileImage = async (buffer: Buffer, userId: string) => {
   const existingUser = await prisma.user.findUnique({
-    where: {
-      id: userId,
-    },
-    select: {
-      id: true,
-      ImagePublicId: true,
-    },
+    where: { id: userId },
+    select: { id: true, ImagePublicId: true },
   });
 
   if (!existingUser) {
-    throw new AppError(
-      httpStatus.NOT_FOUND,
-      "User not found",
-    );
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
   }
 
-  // 2. Upload image to Cloudinary
   const result = await new Promise<{
     secure_url: string;
     public_id: string;
@@ -38,68 +28,84 @@ const uploadProfileImage = async (
       (error, result) => {
         if (error) {
           console.error("Cloudinary upload error:", error);
-
           return reject(
-            new AppError(
-              httpStatus.BAD_REQUEST,
-              "Failed to upload image to Cloudinary",
-            ),
+            new AppError(httpStatus.BAD_REQUEST, "Failed to upload image to Cloudinary"),
           );
         }
-
         if (!result?.secure_url || !result?.public_id) {
-          return reject(
-            new AppError(
-              httpStatus.BAD_REQUEST,
-              "Cloudinary upload failed",
-            ),
-          );
+          return reject(new AppError(httpStatus.BAD_REQUEST, "Cloudinary upload failed"));
         }
-
-        resolve({
-          secure_url: result.secure_url,
-          public_id: result.public_id,
-        });
+        resolve({ secure_url: result.secure_url, public_id: result.public_id });
       },
     );
-
     stream.end(buffer);
   });
 
-  // 3. Update user's profile image
   const user = await prisma.user.update({
-    where: {
-      id: userId,
-    },
+    where: { id: userId },
     data: {
       ImageUrl: result.secure_url,
       ImagePublicId: result.public_id,
     },
-    omit: {
-      password: true,
-    },
+    omit: { password: true },
   });
 
-  // 4. Delete previous image from Cloudinary
   if (existingUser.ImagePublicId) {
     try {
-      await cloudinary.uploader.destroy(
-        existingUser.ImagePublicId,
-        {
-          resource_type: "image",
-        },
-      );
+      await cloudinary.uploader.destroy(existingUser.ImagePublicId, {
+        resource_type: "image",
+      });
     } catch (error) {
-      console.error(
-        "Failed to delete old profile image:",
-        error,
-      );
+      console.error("Failed to delete old profile image:", error);
     }
   }
 
   return user;
 };
 
+const updateMyProfile = async (
+  requestUser: IRequestUser,
+  payload: IUpdateMyProfilePayload,
+) => {
+  const existingUser = await prisma.user.findFirst({
+    where: { id: requestUser.userId, deletedAt: null },
+  });
+
+  if (!existingUser) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  if (payload.areaId && existingUser.role !== Role.CUSTOMER) {
+    throw new AppError(httpStatus.FORBIDDEN, "Only customers can update their area");
+  }
+
+  let validatedAreaId: string | undefined;
+  if (payload.areaId && existingUser.role === Role.CUSTOMER) {
+    const area = await prisma.area.findFirst({
+      where: { id: payload.areaId, deletedAt: null },
+    });
+
+    if (!area) {
+      throw new AppError(httpStatus.BAD_REQUEST, "Invalid area selected");
+    }
+
+    validatedAreaId = payload.areaId;
+  }
+
+  const updatedUser = await prisma.user.update({
+    where: { id: existingUser.id },
+    data: {
+      name: payload.name,
+      phone: payload.phone,
+      ...(validatedAreaId && { areaId: validatedAreaId }),
+    },
+    omit: { password: true },
+  });
+
+  return updatedUser;
+};
+
 export const UserService = {
   uploadProfileImage,
+  updateMyProfile,
 };
