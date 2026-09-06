@@ -1,15 +1,17 @@
 model PowerZone {
-  id        String   @id @default(uuid())
-  name      String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        String    @id @default(uuid())
+  name      String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
   jobPosts JobPost[]
 
-  managers     User[]        @relation("ZoneManager")
-  substations  Substation[]
-  schedules    LoadSheddingSchedule[]
+  managers    User[]                 @relation("ZoneManager")
+  substations Substation[]
+  schedules   LoadSheddingSchedule[]
+
+  announcements Announcement[]
 
   @@index([name])
 }
