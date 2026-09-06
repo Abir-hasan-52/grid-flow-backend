@@ -18,10 +18,7 @@ export const globalErrorHandler = async (
   let errorMessage = err.message || "Internal Server Error";
   let errorName = err.name || "Error";
 
-  // fix: "isOperational" marks errors that are deliberate/expected -- their
-  // message is safe to show the client in ANY environment (dev or prod).
-  // Only truly unexpected errors (bugs, unhandled exceptions) get masked
-  // behind a generic message in production.
+   
   let isOperational = false;
 
   if (err instanceof Prisma.PrismaClientValidationError) {
@@ -63,21 +60,19 @@ export const globalErrorHandler = async (
     statusCode = httpStatus.INTERNAL_SERVER_ERROR;
     errorMessage = "Error occurred during query execution";
     errorName = "PrismaClientUnknownRequestError";
-    // not operational -- this is genuinely unexpected, mask in production
+     
   } else if (err instanceof AppError) {
     statusCode = err.statusCode;
     errorMessage = err.message;
     errorName = "AppError";
-    isOperational = true; // AppError is always a deliberate, client-facing message
+    isOperational = true;  
   } else if (err instanceof Error) {
     errorMessage = err.message;
     errorName = err.name;
-    // not operational -- unrecognized Error subtype, treat as unexpected
+     
   }
 
-  // fix: previously this masked the message in production for EVERY error,
-  // including deliberate/safe ones like AppError("Invalid credentials").
-  // Now only non-operational (truly unexpected) errors get masked in prod.
+ 
   const responseMessage =
     isOperational || config.node_env === "development"
       ? errorMessage
@@ -86,8 +81,7 @@ export const globalErrorHandler = async (
   const responseName =
     isOperational || config.node_env === "development" ? errorName : "Error";
 
-  // fix: production shows a fixed generic "message", with the actual
-  // detail placed in "errors" (per the exact shape requested).
+ 
   const GENERIC_MESSAGE = "Something went wrong";
   const isDev = config.node_env === "development";
 

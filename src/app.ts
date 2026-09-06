@@ -15,6 +15,7 @@ import { ZoneRoutes } from "./app/module/zone/zone.route";
 import { SubstationRoutes } from "./app/module/substation/substation.route";
 import { FeederRoutes } from "./app/module/feeder/feeder.route";
 import { AreaRoutes } from "./app/module/area/area.route";
+import { JobPostRoutes } from "./app/module/job-post/job-post.route";
  
 
 const app: Application = express();
@@ -38,6 +39,7 @@ app.use("/api/v1/zone", ZoneRoutes);
 app.use("/api/v1/substation", SubstationRoutes);
 app.use("/api/v1/feeder", FeederRoutes);
 app.use("/api/v1/area", AreaRoutes);
+app.use("/api/v1/job-post", JobPostRoutes);
 
 // Basic route
 app.get("/", async (req: Request, res: Response) => {
