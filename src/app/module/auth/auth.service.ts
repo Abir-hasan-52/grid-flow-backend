@@ -31,41 +31,43 @@ import { redisClient } from "../../lib/redis";
 import { transporter } from "../../lib/nodemailer";
 import path from "path";
 
-
 const registerCustomer = async (payload: IRegisterCustomerPayload) => {
   const { name, password } = payload;
   const email = payload.email.trim().toLowerCase();
- 
+
   const isUserExists = await prisma.user.findUnique({
     where: { email },
   });
- 
+
   if (isUserExists) {
-    throw new AppError(httpStatus.BAD_REQUEST, "User with this email already exists");
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "User with this email already exists",
+    );
   }
- 
+
   // fix: areaId was never validated before -- accepted any string, even a fake/deleted id
   const area = await prisma.area.findFirst({
     where: { id: payload.areaId, deletedAt: null },
   });
- 
+
   if (!area) {
     throw new AppError(httpStatus.BAD_REQUEST, "Invalid area selected");
   }
- 
+
   // fix: hardcoded "8" -> use config, consistent with forgotPassword/resetPassword
   const hashedPassword = await bcrypt.hash(
     password,
     Number(config.bcrypt_salt_rounds),
   );
- 
+
   const otpValue = crypto.randomInt(100000, 1000000).toString();
   const otpKey = `register-customer-otp:${email}`;
- 
+
   await redisClient.set(otpKey, otpValue, {
     expiration: { type: "EX", value: 5 * 60 }, // 5 minutes
   });
- 
+
   const customerDataKey = `register-customer-data:${email}`;
   const redisCustomerDataPayload: IRegisterCustomerPayload = {
     name,
@@ -73,13 +75,13 @@ const registerCustomer = async (payload: IRegisterCustomerPayload) => {
     password: hashedPassword,
     areaId: payload.areaId,
   };
- 
+
   await redisClient.set(
     customerDataKey,
     JSON.stringify(redisCustomerDataPayload),
     { expiration: { type: "EX", value: 5 * 60 } },
   );
- 
+
   const subject = "Verify your GridFlow account";
   const templatePath = path.join(
     process.cwd(),
@@ -91,7 +93,7 @@ const registerCustomer = async (payload: IRegisterCustomerPayload) => {
     otp: otpValue,
     expiresInMinutes: 5, // fix: was "5 * 60" (300), should just be 5
   });
- 
+
   // Email send is wrapped -- if it fails, the OTP/customer-data keys are already
   // in Redis but useless without the email, so we surface a clear error instead
   // of silently leaving the user stuck.
@@ -108,67 +110,66 @@ const registerCustomer = async (payload: IRegisterCustomerPayload) => {
       "Failed to send verification email. Please try registering again.",
     );
   }
- 
+
   // Note: no EmailLog entry here -- there is no User row yet (account is only
   // created in verifyCustomerEmail on success). If your EmailLog.userId is a
   // required field, log after account creation in verifyCustomerEmail instead
   // (already done below), rather than making userId optional just for this case.
 };
- 
+
 const verifyCustomerEmail = async (payload: IVerifyCustomerEmailPayload) => {
   const otp = payload.otp;
   const email = payload.email.trim().toLowerCase();
- 
+
   // fix: the whole block below was inverted and unreachable. The correct check
   // at THIS stage is simply: does a user with this email already exist? (it
   // shouldn't, since registerCustomer never creates a DB row -- only Redis data)
   const isUserExists = await prisma.user.findUnique({
     where: { email },
   });
- 
+
   if (isUserExists) {
     throw new AppError(
       httpStatus.BAD_REQUEST,
       "User with this email already exists",
     );
   }
- 
+
   const otpKey = `register-customer-otp:${email}`;
   const redisOtp = await redisClient.get(otpKey);
- 
+
   if (!redisOtp) {
     throw new AppError(httpStatus.BAD_REQUEST, "OTP expired or not found");
   }
   if (redisOtp !== otp) {
     throw new AppError(httpStatus.BAD_REQUEST, "Invalid OTP");
   }
- 
+
   const customerDataKey = `register-customer-data:${email}`;
   const redisCustomerData = await redisClient.get(customerDataKey);
- 
+
   if (!redisCustomerData) {
     throw new AppError(
       httpStatus.BAD_REQUEST,
       "Registration data expired or not found. Please register again.",
     );
   }
- 
-  const customerDataPayload: IRegisterCustomerPayload = JSON.parse(
-    redisCustomerData,
-  );
- 
+
+  const customerDataPayload: IRegisterCustomerPayload =
+    JSON.parse(redisCustomerData);
+
   // Area could theoretically be deleted during the 5-minute OTP window -- re-check.
   const area = await prisma.area.findFirst({
     where: { id: customerDataPayload.areaId, deletedAt: null },
   });
- 
+
   if (!area) {
     throw new AppError(
       httpStatus.BAD_REQUEST,
       "The selected area is no longer available. Please register again.",
     );
   }
- 
+
   const createdUser = await prisma.user.create({
     data: {
       name: customerDataPayload.name,
@@ -182,10 +183,10 @@ const verifyCustomerEmail = async (payload: IVerifyCustomerEmailPayload) => {
     },
     omit: { password: true },
   });
- 
-  // fix: Redis keys were never cleaned up after a successful verify
+
+  // Redis keys were never cleaned up after a successful verify
   await redisClient.del([otpKey, customerDataKey]);
- 
+
   await prisma.emailLog.create({
     data: {
       userId: createdUser.id,
@@ -195,29 +196,26 @@ const verifyCustomerEmail = async (payload: IVerifyCustomerEmailPayload) => {
       sentAt: new Date(),
     },
   });
- 
-  // fix: "const { customer, ...user } = createdUser" was destructuring a field
-  // ("customer") that doesn't exist on the User model -- leftover from an
-  // unrelated boilerplate. createdUser IS the user; no split needed.
+
   const jwtPayload = {
     userId: createdUser.id,
     name: createdUser.name,
     email: createdUser.email,
     role: createdUser.role,
   };
- 
+
   const accessToken = jwtUtils.createToken(
     jwtPayload,
     config.jwt_access_secret,
     config.jwt_access_expires_in as SignOptions,
   );
- 
+
   const refreshToken = jwtUtils.createToken(
     jwtPayload,
     config.jwt_refresh_secret,
     config.jwt_refresh_expires_in as SignOptions,
   );
- 
+
   return {
     user: createdUser,
     accessToken,
@@ -228,23 +226,23 @@ const verifyCustomerEmail = async (payload: IVerifyCustomerEmailPayload) => {
 const loginUser = async (payload: ILoginUserPayload) => {
   const { password } = payload;
   const email = payload.email.trim().toLowerCase();
- 
+
   const user = await prisma.user.findFirst({
     where: { email, deletedAt: null },
   });
- 
+
   if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, "User not found");
   }
- 
+
   if (user.status === UserStatus.SUSPENDED) {
     throw new AppError(httpStatus.FORBIDDEN, "User is suspended");
   }
- 
+
   if (user.status === UserStatus.DELETED) {
     throw new AppError(httpStatus.FORBIDDEN, "User is deleted");
   }
- 
+
   // fix: this specific check MUST come before the generic "no password" check
   // below, otherwise it can never be reached (a Google-only user always has
   // password === null, so the generic check would fire first and swallow this
@@ -255,46 +253,52 @@ const loginUser = async (payload: ILoginUserPayload) => {
       "User registered with Google login. Please use Google login.",
     );
   }
- 
+
   if (!user.password) {
-    throw new AppError(httpStatus.FORBIDDEN, "User does not have a password set");
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "User does not have a password set",
+    );
   }
- 
+
   if (!user.emailVerified) {
-    throw new AppError(httpStatus.FORBIDDEN, "Please verify your email before logging in");
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "Please verify your email before logging in",
+    );
   }
- 
+
   const isPasswordMatched = await bcrypt.compare(password, user.password);
- 
+
   if (!isPasswordMatched) {
     throw new AppError(httpStatus.UNAUTHORIZED, "Invalid credentials");
   }
- 
+
   const jwtPayload = {
     userId: user.id,
     name: user.name,
     email: user.email,
     role: user.role,
   };
- 
+
   const accessToken = jwtUtils.createToken(
     jwtPayload,
     config.jwt_access_secret,
     config.jwt_access_expires_in as SignOptions,
   );
- 
+
   const refreshToken = jwtUtils.createToken(
     jwtPayload,
     config.jwt_refresh_secret,
     config.jwt_refresh_expires_in as SignOptions,
   );
- 
+
   return {
     accessToken,
     refreshToken,
   };
 };
- 
+
 const getMe = async (user: IRequestUser) => {
   const isUserExists = await prisma.user.findFirst({
     where: {
@@ -305,20 +309,20 @@ const getMe = async (user: IRequestUser) => {
       password: true,
     },
   });
- 
+
   if (!isUserExists) {
     throw new AppError(httpStatus.NOT_FOUND, "User not found");
   }
- 
+
   return isUserExists;
 };
- 
+
 const refreshToken = async (token: string) => {
   const verifiedRefreshToken = jwtUtils.verifyToken(
     token,
     config.jwt_refresh_secret,
   );
- 
+
   if (!verifiedRefreshToken.success || !verifiedRefreshToken.data) {
     throw new AppError(
       httpStatus.UNAUTHORIZED,
@@ -327,65 +331,70 @@ const refreshToken = async (token: string) => {
         : "Invalid refresh token",
     );
   }
- 
+
   const data = verifiedRefreshToken.data as JwtPayload;
- 
+
   const user = await prisma.user.findFirst({
     where: { id: data.userId, deletedAt: null },
   });
- 
+
   if (!user || user.status !== UserStatus.ACTIVE) {
-    throw new AppError(httpStatus.UNAUTHORIZED, "User is inactive or not found");
+    throw new AppError(
+      httpStatus.UNAUTHORIZED,
+      "User is inactive or not found",
+    );
   }
- 
+
   const jwtPayload = {
     userId: user.id,
     name: user.name,
     email: user.email,
     role: user.role,
   };
- 
+
   const accessToken = jwtUtils.createToken(
     jwtPayload,
     config.jwt_access_secret,
     config.jwt_access_expires_in as SignOptions,
   );
- 
+
   const newRefreshToken = jwtUtils.createToken(
     jwtPayload,
     config.jwt_refresh_secret,
     config.jwt_refresh_expires_in as SignOptions,
   );
- 
+
   return {
     accessToken,
     refreshToken: newRefreshToken,
   };
 };
- 
- 
+
 const logoutUser = async (refreshToken?: string) => {
   if (!refreshToken) {
-    
     return;
   }
- 
-  const verified = jwtUtils.verifyToken(refreshToken, config.jwt_refresh_secret);
- 
-   
+
+  const verified = jwtUtils.verifyToken(
+    refreshToken,
+    config.jwt_refresh_secret,
+  );
+
   if (!verified.success || !verified.data) {
     return;
   }
- 
+
   const decoded = verified.data as JwtPayload;
   const nowInSeconds = Math.floor(Date.now() / 1000);
-  
-  const ttlInSeconds = decoded.exp ? decoded.exp - nowInSeconds : 60 * 60 * 24 * 7;
- 
+
+  const ttlInSeconds = decoded.exp
+    ? decoded.exp - nowInSeconds
+    : 60 * 60 * 24 * 7;
+
   if (ttlInSeconds <= 0) {
     return;
   }
- 
+
   await redisClient.set(`blacklist-refresh-token:${refreshToken}`, "true", {
     expiration: {
       type: "EX",
@@ -393,7 +402,6 @@ const logoutUser = async (refreshToken?: string) => {
     },
   });
 };
- 
 
 const googleLogin = async (payload: IGoogleLoginPayload) => {
   let googleIdTokenPayload: TokenPayload | null | undefined = null;
@@ -515,6 +523,12 @@ const forgotPassword = async (payload: IForgotPasswordPayload) => {
   const isUserExist = await prisma.user.findUnique({
     where: { email },
   });
+  if (isUserExist?.role === Role.ADMIN) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "Admin password reset is not allowed",
+    );
+  }
 
   if (!isUserExist) {
     throw new AppError(httpStatus.NOT_FOUND, "User not found");
@@ -609,6 +623,12 @@ const resetPassword = async (payload: IResetPasswordPayload) => {
   const isUserExist = await prisma.user.findUnique({
     where: { email },
   });
+  if (isUserExist?.role === Role.ADMIN) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "Admin password reset is not allowed",
+    );
+  }
 
   if (!isUserExist) {
     throw new AppError(httpStatus.NOT_FOUND, "User not found");
@@ -725,5 +745,4 @@ export const AuthService = {
   forgotPassword,
   resetPassword,
   logoutUser,
-
 };
