@@ -10,6 +10,7 @@ model PowerZone {
   managers    User[]                 @relation("ZoneManager")
   substations Substation[]
   schedules   LoadSheddingSchedule[]
+  technicians User[] @relation("TechnicianZone")
 
   announcements Announcement[]
 

@@ -6,6 +6,8 @@ export interface ICreateJobPostPayload {
   requirements?: string;
   deadline: string | Date;
   powerZoneId?: string;
+  salary?: number;
+  workingHours?: number;
 }
 
 export interface IUpdateJobPostPayload {

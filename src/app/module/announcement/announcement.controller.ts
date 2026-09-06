@@ -24,6 +24,33 @@ const createAnnouncement = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getAllAnnouncements = catchAsync(
+  async (req: Request, res: Response) => {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      throw new AppError(
+        httpStatus.UNAUTHORIZED,
+        "Unauthorized user",
+      );
+    }
+
+    const result =
+      await AnnouncementService.getAllAnnouncements(
+        req.query,
+        userId,
+      );
+
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Announcements retrieved successfully",
+      data: result,
+    });
+  },
+);
+
 export const AnnouncementController = {
   createAnnouncement,
+    getAllAnnouncements,
 };

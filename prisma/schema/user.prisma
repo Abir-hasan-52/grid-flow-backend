@@ -49,6 +49,10 @@ model User {
   jobPostsCreated      JobPost[]               @relation("JobPostCreatedBy")
   applicationsReviewed TechnicianApplication[] @relation("ApplicationReviewedBy")
   announcementsCreated Announcement[]          @relation("AnnouncementCreatedBy")
+  applications         TechnicianApplication[] @relation("ApplicantUser")
+
+  technicianZoneId String?
+  technicianZone   PowerZone? @relation("TechnicianZone", fields: [technicianZoneId], references: [id])
 
   // relations: logs
   emailLogs EmailLog[]

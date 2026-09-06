@@ -308,6 +308,9 @@ const getMe = async (user: IRequestUser) => {
     omit: {
       password: true,
     },
+    include: {
+      technicianZone: true,
+    },
   });
 
   if (!isUserExists) {

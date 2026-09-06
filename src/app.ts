@@ -18,6 +18,7 @@ import { AreaRoutes } from "./app/module/area/area.route";
 import { JobPostRoutes } from "./app/module/job-post/job-post.route";
 import { UserRoutes } from "./app/module/user/user.route";
 import { AnnouncementRoutes } from "./app/module/announcement/announcement.route";
+import { TechnicianApplicationRoutes } from "./app/module/technician-application/technician-application.route";
 
 const app: Application = express();
 
@@ -43,6 +44,10 @@ app.use("/api/v1/area", AreaRoutes);
 app.use("/api/v1/job-post", JobPostRoutes);
 app.use("/api/v1/user", UserRoutes);
 app.use("/api/v1/announcements", AnnouncementRoutes);
+
+app.use("/api/v1/job-posts", TechnicianApplicationRoutes.applyRouter);
+app.use("/api/v1/my-applications", TechnicianApplicationRoutes.myApplicationsRouter);
+app.use("/api/v1/admin/technician-applications", TechnicianApplicationRoutes.adminRouter);
 // Basic route
 app.get("/", async (req: Request, res: Response) => {
   res.status(httpStatus.OK).json({

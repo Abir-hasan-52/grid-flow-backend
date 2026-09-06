@@ -1,16 +1,16 @@
 model TechnicianApplication {
   id              String            @id @default(uuid())
-  fullName        String
-  email           String
-  phone           String
+  status          ApplicationStatus @default(PENDING)
   experience      String?
   resumeUrl       String
-  status          ApplicationStatus @default(PENDING)
   rejectionReason String?
   reviewedAt      DateTime?
 
-  jobPostId    String
-  jobPost      JobPost @relation(fields: [jobPostId], references: [id])
+  jobPostId String
+  jobPost   JobPost @relation(fields: [jobPostId], references: [id])
+
+  applicantId String
+  applicant   User   @relation("ApplicantUser", fields: [applicantId], references: [id])
 
   reviewedById String?
   reviewedBy   User?   @relation("ApplicationReviewedBy", fields: [reviewedById], references: [id])
@@ -18,7 +18,8 @@ model TechnicianApplication {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([jobPostId, email])
+  @@unique([jobPostId, applicantId])
   @@index([jobPostId])
+  @@index([applicantId])
   @@index([status])
 }

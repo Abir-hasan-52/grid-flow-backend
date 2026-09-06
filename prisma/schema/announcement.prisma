@@ -10,7 +10,6 @@ model Announcement {
 
     createdById String
     createdBy   User   @relation("AnnouncementCreatedBy", fields: [createdById], references: [id])
-
     powerZoneId String?
     powerZone   PowerZone? @relation(fields: [powerZoneId], references: [id])
 

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { AnnouncementType } from "../../../../generated/prisma/enums";
+import { AnnouncementStatus, AnnouncementType } from "../../../../generated/prisma/enums";
 
 const createAnnouncementSchema = z.object({
   title: z
@@ -23,6 +23,40 @@ const createAnnouncementSchema = z.object({
     .optional(),
 });
 
+const getAllAnnouncementsSchema = z.object({
+  page: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .optional(),
+
+  limit: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(100)
+    .optional(),
+
+  search: z.string().optional(),
+
+  type: z
+    .enum(AnnouncementType)
+    .optional(),
+
+  status: z
+    .enum(AnnouncementStatus)
+    .optional(),
+
+  sortBy: z
+    .enum(["createdAt", "updatedAt", "title"])
+    .optional(),
+
+  sortOrder: z
+    .enum(["asc", "desc"])
+    .optional(),
+});
+
 export const AnnouncementValidation = {
   createAnnouncementSchema,
+  getAllAnnouncementsSchema,
 };

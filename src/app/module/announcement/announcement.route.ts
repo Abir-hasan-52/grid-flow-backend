@@ -17,4 +17,10 @@ router.post(
   AnnouncementController.createAnnouncement,
 );
 
+router.get(
+  "/drafts",
+  auth(Role.ADMIN, Role.ZONE_MANAGER),
+  AnnouncementController.getAllAnnouncements,
+);
+
 export const AnnouncementRoutes = router;
