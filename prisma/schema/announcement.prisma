@@ -1,0 +1,16 @@
+model Announcement {
+  id        String             @id @default(uuid())
+  title     String
+  content   String
+  type      AnnouncementType   @default(GENERAL)
+  status    AnnouncementStatus @default(DRAFT)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  deletedAt DateTime?
+
+  createdById String
+  createdBy   User @relation("AnnouncementCreatedBy", fields: [createdById], references: [id])
+
+  @@index([type])
+  @@index([status])
+}

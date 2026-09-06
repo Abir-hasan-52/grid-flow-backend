@@ -4,18 +4,31 @@ import { catchAsync } from "../../utils/catchAsync";
 import { sendResponse } from "../../utils/sendResponse";
 import type { IRequestUser } from "./auth.interface";
 import { AuthService } from "./auth.service";
+import { AppError } from "../../utils/AppError";
 
-const registerPatient = catchAsync(async (req: Request, res: Response) => {
+ const registerCustomer = catchAsync(async (req: Request, res: Response) => {
   const payload = req.body;
-  const result = await AuthService.registerPatient(payload);
-
+  await AuthService.registerCustomer(payload);
+ 
+  sendResponse(res, {
+    statusCode: httpStatus.CREATED,
+    success: true,
+    message: "OTP sent to your email. Please verify to complete registration.",
+    data: null,
+  });
+});
+ 
+const verifyCustomerEmail = catchAsync(async (req: Request, res: Response) => {
+  const payload = req.body;
+  const result = await AuthService.verifyCustomerEmail(payload);
+ 
   const { accessToken, refreshToken, user } = result;
-
+ 
   res.cookie("accessToken", accessToken, {
     httpOnly: true,
     secure: false,
     sameSite: "none",
-    maxAge: 1000 * 60 * 60 * 24, // 24 hour or 1 day
+    maxAge: 1000 * 60 * 60 * 24, // 24 hours
   });
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
@@ -23,15 +36,15 @@ const registerPatient = catchAsync(async (req: Request, res: Response) => {
     sameSite: "none",
     maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
   });
-
+ 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,
-    message: "Patient registered successfully",
+    message: "Email verified, customer registered successfully",
     data: {
+      user,
       accessToken,
       refreshToken,
-      user,
     },
   });
 });
@@ -40,12 +53,12 @@ const loginUser = catchAsync(async (req: Request, res: Response) => {
   const payload = req.body;
   const result = await AuthService.loginUser(payload);
   const { accessToken, refreshToken } = result;
-
+ 
   res.cookie("accessToken", accessToken, {
     httpOnly: true,
     secure: false,
     sameSite: "none",
-    maxAge: 1000 * 60 * 60 * 24, // 24 hour or 1 day
+    maxAge: 1000 * 60 * 60 * 24, // 24 hours
   });
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
@@ -53,7 +66,7 @@ const loginUser = catchAsync(async (req: Request, res: Response) => {
     sameSite: "none",
     maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
   });
-
+ 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -64,14 +77,17 @@ const loginUser = catchAsync(async (req: Request, res: Response) => {
     },
   });
 });
-
+ 
 const getMe = catchAsync(async (req: Request, res: Response) => {
   const user = req.user as unknown as IRequestUser;
-
+ 
   if (!user) {
-    throw new Error("User information is missing in the request");
+    // fix: was `throw new Error(...)` -> defaulted to 500. This should never
+    // actually happen if the auth() middleware ran first, but if it does,
+    // it's a client-auth problem, not a server crash.
+    throw new AppError(httpStatus.UNAUTHORIZED, "User information is missing in the request");
   }
-
+ 
   const result = await AuthService.getMe(user);
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -80,27 +96,28 @@ const getMe = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
-
+ 
 const refreshToken = catchAsync(async (req: Request, res: Response) => {
   if (!req.cookies.refreshToken) {
-    throw new Error("Refresh token is missing");
+    throw new AppError(httpStatus.UNAUTHORIZED, "Refresh token is missing");
   }
+ 
   const result = await AuthService.refreshToken(req.cookies.refreshToken);
   const { accessToken, refreshToken: newRefreshToken } = result;
-
+ 
   res.cookie("accessToken", accessToken, {
     httpOnly: true,
     secure: false,
     sameSite: "none",
-    maxAge: 1000 * 60 * 60 * 24, // 24 hour or 1 day
+    maxAge: 1000 * 60 * 60 * 24,
   });
   res.cookie("refreshToken", newRefreshToken, {
     httpOnly: true,
     secure: false,
     sameSite: "none",
-    maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+    maxAge: 1000 * 60 * 60 * 24 * 7,
   });
-
+ 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -111,6 +128,7 @@ const refreshToken = catchAsync(async (req: Request, res: Response) => {
     },
   });
 });
+ 
 
 const googleLogin = catchAsync(async (req: Request, res: Response) => {
   const payload = req.body;
@@ -142,6 +160,29 @@ const googleLogin = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+
+const logoutUser = catchAsync(async (req: Request, res: Response) => {
+  await AuthService.logoutUser(req.cookies?.refreshToken);
+ 
+  res.clearCookie("accessToken", {
+    httpOnly: true,
+    secure: false,
+    sameSite: "none",
+  });
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    secure: false,
+    sameSite: "none",
+  });
+ 
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Logged out successfully",
+    data: null,
+  });
+});
+
 const forgotPassword = catchAsync(async (req: Request, res: Response) => {
   const payload = req.body;
   await AuthService.forgotPassword(payload);
@@ -165,11 +206,13 @@ const resetPassword = catchAsync(async (req: Request, res: Response) => {
 });
 
 export const AuthController = {
-  registerPatient,
+  registerCustomer,
   loginUser,
+  verifyCustomerEmail,
   getMe,
   refreshToken,
   googleLogin,
+  logoutUser,
   forgotPassword,
   resetPassword,
 };

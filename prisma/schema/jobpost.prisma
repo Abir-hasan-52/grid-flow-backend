@@ -1,0 +1,22 @@
+model JobPost {
+  id           String        @id @default(uuid())
+  title        String
+  description  String
+  requirements String?
+  deadline     DateTime
+  status       JobPostStatus @default(DRAFT)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  deletedAt    DateTime?
+
+  powerZoneId  String?
+  powerZone    PowerZone?    @relation(fields: [powerZoneId], references: [id])
+
+  createdById  String
+  createdBy    User          @relation("JobPostCreatedBy", fields: [createdById], references: [id])
+
+  applications TechnicianApplication[]
+
+  @@index([status])
+  @@index([powerZoneId])
+}

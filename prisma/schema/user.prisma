@@ -43,6 +43,12 @@ model User {
   priorityRequests PriorityRestorationRequest[]
   payments         Payment[]
 
+  profileImage String?
+// relations: JobPost, TechnicianApplication, Announcement
+  jobPostsCreated      JobPost[]               @relation("JobPostCreatedBy")
+  applicationsReviewed TechnicianApplication[]  @relation("ApplicationReviewedBy")
+  announcementsCreated Announcement[]           @relation("AnnouncementCreatedBy")
+
   // relations: logs
   emailLogs EmailLog[]
   auditLogs AuditLog[]

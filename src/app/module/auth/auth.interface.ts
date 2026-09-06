@@ -1,5 +1,3 @@
-// import { Role } from "../../../generated/prisma/browser"
-
 import type { Role } from "../../../../generated/prisma/enums";
 
 export interface ILoginUserPayload {
@@ -7,10 +5,16 @@ export interface ILoginUserPayload {
   password: string;
 }
 
-export interface IRegisterPatientPayload {
+export interface IRegisterCustomerPayload {
   name: string;
   email: string;
   password: string;
+  areaId: string;
+}
+
+export interface IVerifyCustomerEmailPayload {
+  email: string;
+  otp: string;
 }
 
 export interface IRequestUser {
@@ -22,6 +26,7 @@ export interface IRequestUser {
 
 export interface IGoogleLoginPayload {
   googleId: string;
+  areaId?: string;
 }
 
 export interface IForgotPasswordPayload {

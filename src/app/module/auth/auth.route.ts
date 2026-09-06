@@ -8,21 +8,45 @@ import { AuthValidation } from "./auth.validation";
 
 const router = Router();
 
-router.post("/register", AuthController.registerPatient);
-router.post("/login", AuthController.loginUser);
-router.get(
-	"/me",
-	auth(Role.ADMIN, Role.CUSTOMER, Role.TECHNICIAN, Role.ZONE_MANAGER),
-	AuthController.getMe,
+router.post(
+  "/register",
+  validateRequest(AuthValidation.registerCustomerValidation),
+  AuthController.registerCustomer,
 );
+
+router.post(
+  "/login",
+  validateRequest(AuthValidation.loginValidation),
+  AuthController.loginUser,
+);
+
+router.post(
+  "/verify-email",
+  validateRequest(AuthValidation.verifyCustomerEmailValidation),
+  AuthController.verifyCustomerEmail,
+);
+
+router.get(
+  "/me",
+  auth(Role.ADMIN, Role.CUSTOMER, Role.TECHNICIAN, Role.ZONE_MANAGER),
+  AuthController.getMe,
+);
+
 router.post("/refresh-token", AuthController.refreshToken);
+router.post("/logout", auth(Role.ADMIN, Role.CUSTOMER, Role.TECHNICIAN, Role.ZONE_MANAGER), AuthController.logoutUser);
 
 router.post("/google", AuthController.googleLogin);
-router.post("/forgot-password",
+
+router.post(
+  "/forgot-password",
   validateRequest(AuthValidation.forgotCustomerValidation),
-  AuthController.forgotPassword);
-router.post("/reset-password", 
+  AuthController.forgotPassword,
+);
+
+router.post(
+  "/reset-password",
   validateRequest(AuthValidation.resetCustomerValidation),
-  AuthController.resetPassword);
+  AuthController.resetPassword,
+);
 
 export const AuthRoutes = router;

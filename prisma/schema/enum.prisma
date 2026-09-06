@@ -87,3 +87,27 @@ enum AuditAction {
     VERIFY
     ASSIGN
 }
+
+enum JobPostStatus {
+  DRAFT
+  PUBLISHED
+  CLOSED
+}
+
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum AnnouncementType {
+  LOAD_SHEDDING
+  EMERGENCY
+  MAINTENANCE
+  GENERAL
+}
+
+enum AnnouncementStatus {
+  DRAFT
+  PUBLISHED
+}
