@@ -19,6 +19,7 @@ import { JobPostRoutes } from "./app/module/job-post/job-post.route";
 import { UserRoutes } from "./app/module/user/user.route";
 import { AnnouncementRoutes } from "./app/module/announcement/announcement.route";
 import { TechnicianApplicationRoutes } from "./app/module/technician-application/technician-application.route";
+import { AdminUserRoutes } from "./app/module/admin-user/admin-user.route";
 
 const app: Application = express();
 
@@ -49,6 +50,7 @@ app.use("/api/v1/job-posts", TechnicianApplicationRoutes.applyRouter);
 app.use("/api/v1/my-applications", TechnicianApplicationRoutes.myApplicationsRouter);
 app.use("/api/v1/admin/technician-applications", TechnicianApplicationRoutes.adminRouter);
 
+app.use("/api/v1/admin/users", AdminUserRoutes);
 // Basic route
 app.get("/", async (req: Request, res: Response) => {
   res.status(httpStatus.OK).json({
