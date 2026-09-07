@@ -3,7 +3,8 @@ import httpStatus from "http-status";
 import { catchAsync } from "../../utils/catchAsync";
 import { sendResponse } from "../../utils/sendResponse";
 import type { IRequestUser } from "../auth/auth.interface";
-import { ScheduleService } from "./Schedule.service";
+import { ScheduleService } from "./schedule.service";
+// import { ScheduleService } from "./Schedule.service";
 
 const createSchedule = catchAsync(async (req: Request, res: Response) => {
   const requestUser = req.user as unknown as IRequestUser;

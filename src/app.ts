@@ -20,7 +20,8 @@ import { UserRoutes } from "./app/module/user/user.route";
 import { AnnouncementRoutes } from "./app/module/announcement/announcement.route";
 import { TechnicianApplicationRoutes } from "./app/module/technician-application/technician-application.route";
 import { AdminUserRoutes } from "./app/module/admin-user/admin-user.route";
-import { ScheduleRoutes } from "./app/module/schedule/Schedule.route";
+import { ScheduleRoutes } from "./app/module/schedule/schedule.route";
+import { OutageRoutes } from "./app/module/outage/outage.route";
 
 const app: Application = express();
 
@@ -46,14 +47,23 @@ app.use("/api/v1/area", AreaRoutes);
 app.use("/api/v1/job-post", JobPostRoutes);
 app.use("/api/v1/user", UserRoutes);
 app.use("/api/v1/announcements", AnnouncementRoutes);
-
+// technician application routes
 app.use("/api/v1/job-posts", TechnicianApplicationRoutes.applyRouter);
-app.use("/api/v1/my-applications", TechnicianApplicationRoutes.myApplicationsRouter);
-app.use("/api/v1/admin/technician-applications", TechnicianApplicationRoutes.adminRouter);
-
+app.use(
+  "/api/v1/my-applications",
+  TechnicianApplicationRoutes.myApplicationsRouter,
+);
+app.use(
+  "/api/v1/admin/technician-applications",
+  TechnicianApplicationRoutes.adminRouter,
+);
+// admin user routes
 app.use("/api/v1/admin/users", AdminUserRoutes);
-
+// schedule routes
 app.use("/api/v1/load-shedding-schedules", ScheduleRoutes);
+// outage routes
+app.use("/api/v1/outages", OutageRoutes.outageRouter);
+app.use("/api/v1/my-reports", OutageRoutes.myReportsRouter);
 // Basic route
 app.get("/", async (req: Request, res: Response) => {
   res.status(httpStatus.OK).json({

@@ -3,7 +3,8 @@ import { Role } from "../../../../generated/prisma/enums";
 import { auth } from "../../middleware/checkAuth";
 import { validateRequest } from "../../middleware/validateRequest";
 import { ScheduleController } from "./schedule.controller";
-import { ScheduleValidation } from "./Schedule.validation";
+import { ScheduleValidation } from "./schedule.validation";
+// import { ScheduleValidation } from "./Schedule.validation";
  
 
 const router = Router();
