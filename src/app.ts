@@ -20,6 +20,7 @@ import { UserRoutes } from "./app/module/user/user.route";
 import { AnnouncementRoutes } from "./app/module/announcement/announcement.route";
 import { TechnicianApplicationRoutes } from "./app/module/technician-application/technician-application.route";
 import { AdminUserRoutes } from "./app/module/admin-user/admin-user.route";
+import { ScheduleRoutes } from "./app/module/schedule/Schedule.route";
 
 const app: Application = express();
 
@@ -51,6 +52,8 @@ app.use("/api/v1/my-applications", TechnicianApplicationRoutes.myApplicationsRou
 app.use("/api/v1/admin/technician-applications", TechnicianApplicationRoutes.adminRouter);
 
 app.use("/api/v1/admin/users", AdminUserRoutes);
+
+app.use("/api/v1/load-shedding-schedules", ScheduleRoutes);
 // Basic route
 app.get("/", async (req: Request, res: Response) => {
   res.status(httpStatus.OK).json({
