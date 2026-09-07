@@ -48,6 +48,7 @@ app.use("/api/v1/announcements", AnnouncementRoutes);
 app.use("/api/v1/job-posts", TechnicianApplicationRoutes.applyRouter);
 app.use("/api/v1/my-applications", TechnicianApplicationRoutes.myApplicationsRouter);
 app.use("/api/v1/admin/technician-applications", TechnicianApplicationRoutes.adminRouter);
+
 // Basic route
 app.get("/", async (req: Request, res: Response) => {
   res.status(httpStatus.OK).json({

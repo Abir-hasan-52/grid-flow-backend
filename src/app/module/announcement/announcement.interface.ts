@@ -1,4 +1,4 @@
-import { AnnouncementStatus, AnnouncementType } from "../../../../generated/prisma/enums";
+import type { AnnouncementStatus, AnnouncementType } from "../../../../generated/prisma/enums";
 
 export interface ICreateAnnouncement {
   title: string;
@@ -7,6 +7,12 @@ export interface ICreateAnnouncement {
   powerZoneId?: string;
 }
 
+export interface IUpdateAnnouncement {
+  title?: string;
+  content?: string;
+  type?: AnnouncementType;
+  powerZoneId?: string;
+}
 
 export interface IGetAllAnnouncementsQuery {
   page?: number;
@@ -14,6 +20,7 @@ export interface IGetAllAnnouncementsQuery {
   search?: string;
   type?: AnnouncementType;
   status?: AnnouncementStatus;
+  powerZoneId?: string;
   sortBy?: "createdAt" | "updatedAt" | "title";
   sortOrder?: "asc" | "desc";
 }

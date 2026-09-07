@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/style/useImportType: <explanation> */
 import httpStatus from "http-status";
 import { JobPostStatus } from "../../../../generated/prisma/enums";
 import { prisma } from "../../lib/prisma";
@@ -30,6 +31,8 @@ const createJobPost = async (
       deadline: new Date(payload.deadline),
       powerZoneId: payload.powerZoneId,
       createdById,
+      salary: payload.salary,
+      workingHours: payload.workingHours,
     },
   });
 
@@ -69,6 +72,8 @@ const getAllPublishedJobPosts = async (query: IGetAllJobPostsQuery) => {
         deadline: true,
         status: true,
         createdAt: true,
+        salary: true,
+        workingHours: true,
         powerZone: { select: { id: true, name: true } },
       },
     }),

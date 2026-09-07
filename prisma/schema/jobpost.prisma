@@ -9,7 +9,7 @@ model JobPost {
     updatedAt    DateTime      @updatedAt
     deletedAt    DateTime?
     salary       Decimal?      @db.Decimal(10, 2)
-    workingHours Int?
+    workingHours String?
 
     powerZoneId String?
     powerZone   PowerZone? @relation(fields: [powerZoneId], references: [id])

@@ -6,8 +6,8 @@ export interface ICreateJobPostPayload {
   requirements?: string;
   deadline: string | Date;
   powerZoneId?: string;
-  salary?: number;
-  workingHours?: number;
+salary?: number;
+workingHours?: string;
 }
 
 export interface IUpdateJobPostPayload {
@@ -16,6 +16,8 @@ export interface IUpdateJobPostPayload {
   requirements?: string;
   deadline?: string | Date;
   powerZoneId?: string;
+  salary?: number;
+  workingHours?: string;
 }
 
 export interface IGetAllJobPostsQuery {

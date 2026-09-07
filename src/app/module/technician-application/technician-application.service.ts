@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/style/useImportType: <explanation> */
 import path from "node:path";
 import ejs from "ejs";
 import httpStatus from "http-status";
@@ -206,7 +207,7 @@ const getAllApplicationsAdmin = async (
         applicant: {
           select: { id: true, name: true, email: true, phone: true },
         },
-        jobPost: { select: { id: true, title: true, powerZoneId: true } },
+        jobPost: { select: { id: true, title: true, powerZoneId: true, salary: true, workingHours: true } },
       },
     }),
     prisma.technicianApplication.count({ where }),
@@ -222,8 +223,8 @@ const getApplicationByIdAdmin = async (id: string) => {
   const application = await prisma.technicianApplication.findFirst({
     where: { id },
     include: {
-      applicant: { select: { id: true, name: true, email: true, phone: true } },
-      jobPost: { select: { id: true, title: true, powerZoneId: true } },
+      applicant: { select: { id: true, name: true, email: true, phone: true, } },
+      jobPost: { select: { id: true, title: true, powerZoneId: true, salary: true, workingHours: true } },
       reviewedBy: { select: { id: true, name: true } },
     },
   });
