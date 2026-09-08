@@ -24,6 +24,7 @@ import { ScheduleRoutes } from "./app/module/schedule/schedule.route";
 import { OutageRoutes } from "./app/module/outage/outage.route";
 import { PriorityRestorationRoute } from "./app/module/priority-restoration/priority-restoration.route";
 import { TechnicianAssignmentRoutes } from "./app/module/technician-assignment/technician-assignment.route";
+import { DashboardRoutes } from "./app/module/dashboard/dashboard.route";
 
 const app: Application = express();
 
@@ -74,6 +75,9 @@ app.use("/api/v1/priority-restoration", PriorityRestorationRoute);
 app.use("/api/v1/outages", TechnicianAssignmentRoutes.outageAssignRouter);
 app.use("/api/v1/assignments", TechnicianAssignmentRoutes.assignmentRouter);
 app.use("/api/v1/my-assignments", TechnicianAssignmentRoutes.myAssignmentsRouter);
+
+// dashboard routes
+app.use("/api/v1/dashboard", DashboardRoutes);
 
 // Basic route
 app.get("/", async (req: Request, res: Response) => {
