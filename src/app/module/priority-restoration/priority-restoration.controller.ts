@@ -26,7 +26,57 @@ const priorityRestorationCallback = catchAsync(async (req: Request, res: Respons
   res.redirect(redirectUrl);
 });
 
+const getMyPriorityRequests = catchAsync(async (req: Request, res: Response) => {
+  const requestUser = req.user as unknown as IRequestUser;
+  const result = await PriorityRestorationService.getMyPriorityRequests(
+    requestUser.userId,
+    req.query,
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Priority requests fetched successfully",
+    data: result.data,
+    meta: result.meta,
+  });
+});
+
+const getPaymentStatus = catchAsync(async (req: Request, res: Response) => {
+  const requestUser = req.user as unknown as IRequestUser;
+  const result = await PriorityRestorationService.getPaymentStatus(
+    requestUser.userId,
+    req.params.id as string,
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Payment status fetched successfully",
+    data: result,
+  });
+});
+
+const getAllPriorityRequests = catchAsync(async (req: Request, res: Response) => {
+  const requestUser = req.user as unknown as IRequestUser;
+  const result = await PriorityRestorationService.getAllPriorityRequests(
+    req.query,
+    requestUser,
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Priority requests fetched successfully",
+    data: result.data,
+    meta: result.meta,
+  });
+});
+
 export const PriorityRestorationController = {
   createPriorityRequest,
   priorityRestorationCallback,
+  getMyPriorityRequests,
+  getPaymentStatus,
+  getAllPriorityRequests,
 };

@@ -23,4 +23,25 @@ router.get(
   PriorityRestorationController.priorityRestorationCallback,
 );
 
+// Customer: get own priority restoration requests
+router.get(
+  "/my-requests",
+  auth(Role.CUSTOMER),
+  PriorityRestorationController.getMyPriorityRequests,
+);
+
+// Customer: get payment status (:id is the priorityRequest id)
+router.get(
+  "/payment/:id",
+  auth(Role.CUSTOMER),
+  PriorityRestorationController.getPaymentStatus,
+);
+
+// Admin / Zone Manager: view priority restoration requests
+router.get(
+  "/",
+  auth(Role.ADMIN, Role.ZONE_MANAGER),
+  PriorityRestorationController.getAllPriorityRequests,
+);
+
 export const PriorityRestorationRoute = router;

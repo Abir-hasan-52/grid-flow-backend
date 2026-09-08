@@ -14,10 +14,23 @@ import { getBkashIdToken } from "../../lib/bkash";
 import { prisma } from "../../lib/prisma";
 // import { transporter } from "../../lib/mailer";
 import { AppError } from "../../utils/AppError";
-// import type { ICreatePriorityRequestPayload } from "./priorityRestoration.interface";
+import type { ICreatePriorityRequestPayload } from "./priority-restoration.interface";
 import type { IRequestUser } from "../auth/auth.interface";
-import { ICreatePriorityRequestPayload } from "./priority-restoration.interface";
 import { transporter } from "../../lib/nodemailer";
+
+interface IGetMyPriorityRequestsQuery {
+  page?: number;
+  limit?: number;
+}
+
+interface IGetAllPriorityRequestsQuery {
+  page?: number;
+  limit?: number;
+  status?: PriorityRequestStatus;
+  powerZoneId?: string;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+}
 
 const OUTAGE_UNRESOLVED_STATUSES: OutageStatus[] = [
   OutageStatus.REPORTED,
@@ -116,12 +129,8 @@ const createPriorityRequest = async (
   try {
     const bkashIdToken = await getBkashIdToken();
     if (!bkashIdToken) {
-      throw new AppError(
-        httpStatus.INTERNAL_SERVER_ERROR,
-        "Failed to retrieve bKash ID token",
-      );
+      throw new AppError(httpStatus.INTERNAL_SERVER_ERROR, "Failed to obtain bKash ID token");
     }
-
     const bkashCreatePayment = await fetch(
       `${config.bkash_base_url}/tokenized/checkout/create`,
       {
@@ -243,10 +252,7 @@ const priorityRestorationCallback = async (query: Record<string, any>) => {
 
   const bkashIdToken = await getBkashIdToken();
   if (!bkashIdToken) {
-    throw new AppError(
-      httpStatus.INTERNAL_SERVER_ERROR,
-      "Failed to retrieve bKash ID token",
-    );
+    throw new AppError(httpStatus.INTERNAL_SERVER_ERROR, "Failed to obtain bKash ID token");
   }
 
   const executePaymentResponse = await fetch(
@@ -342,7 +348,132 @@ const priorityRestorationCallback = async (query: Record<string, any>) => {
   return { redirectUrl: failureRedirect };
 };
 
+const getMyPriorityRequests = async (
+  customerId: string,
+  query: IGetMyPriorityRequestsQuery,
+) => {
+  const { page = 1, limit = 10 } = query;
+  const skip = (page - 1) * limit;
+
+  const where = { customerId };
+
+  const [requests, total] = await Promise.all([
+    prisma.priorityRestorationRequest.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { createdAt: "desc" },
+      include: {
+        outage: { select: { id: true, status: true, feeder: { select: { id: true, name: true } } } },
+        payment: { select: { id: true, status: true, amount: true, transactionId: true, verifiedAt: true } },
+      },
+    }),
+    prisma.priorityRestorationRequest.count({ where }),
+  ]);
+
+  return {
+    meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    data: requests,
+  };
+};
+
+// NOTE: :id here is the PriorityRestorationRequest id (what the customer
+// already has from /create and /my-requests), not the internal Payment id.
+const getPaymentStatus = async (customerId: string, priorityRequestId: string) => {
+  const priorityRequest = await prisma.priorityRestorationRequest.findFirst({
+    where: { id: priorityRequestId, customerId }, // ownership baked into query
+    include: {
+      payment: true,
+      outage: { select: { id: true, status: true } },
+    },
+  });
+
+  if (!priorityRequest) {
+    throw new AppError(httpStatus.NOT_FOUND, "Priority request not found");
+  }
+
+  if (!priorityRequest.payment) {
+    throw new AppError(httpStatus.NOT_FOUND, "No payment found for this request");
+  }
+
+  return {
+    priorityRequestId: priorityRequest.id,
+    priorityRequestStatus: priorityRequest.status,
+    outageStatus: priorityRequest.outage.status,
+    payment: {
+      id: priorityRequest.payment.id,
+      status: priorityRequest.payment.status,
+      amount: priorityRequest.payment.amount,
+      transactionId: priorityRequest.payment.transactionId,
+      verifiedAt: priorityRequest.payment.verifiedAt,
+    },
+  };
+};
+
+const getAllPriorityRequests = async (
+  query: IGetAllPriorityRequestsQuery,
+  requestUser: IRequestUser,
+) => {
+  const {
+    page = 1,
+    limit = 10,
+    status,
+    powerZoneId,
+    sortBy = "createdAt",
+    sortOrder = "desc",
+  } = query;
+
+  const skip = (page - 1) * limit;
+
+  let zoneScope: Record<string, unknown> = {};
+
+  if (requestUser.role === Role.ZONE_MANAGER) {
+    const zoneManager = await prisma.user.findFirst({
+      where: { id: requestUser.userId, deletedAt: null },
+    });
+    zoneScope = {
+      outage: { feeder: { substation: { powerZoneId: zoneManager?.managedZoneId ?? "__none__" } } },
+    };
+  } else if (powerZoneId) {
+    zoneScope = { outage: { feeder: { substation: { powerZoneId } } } };
+  }
+
+  const where = {
+    ...zoneScope,
+    ...(status && { status }),
+  };
+
+  const [requests, total] = await Promise.all([
+    prisma.priorityRestorationRequest.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { [sortBy]: sortOrder },
+      include: {
+        customer: { select: { id: true, name: true, email: true, phone: true } },
+        outage: {
+          select: {
+            id: true,
+            status: true,
+            feeder: { select: { id: true, name: true } },
+          },
+        },
+        payment: { select: { id: true, status: true, amount: true, transactionId: true } },
+      },
+    }),
+    prisma.priorityRestorationRequest.count({ where }),
+  ]);
+
+  return {
+    meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    data: requests,
+  };
+};
+
 export const PriorityRestorationService = {
   createPriorityRequest,
   priorityRestorationCallback,
+  getMyPriorityRequests,
+  getPaymentStatus,
+  getAllPriorityRequests,
 };
