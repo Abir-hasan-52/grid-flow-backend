@@ -14,8 +14,12 @@ import { prisma } from "../../lib/prisma";
 // import { transporter } from "../../lib/mailer";
 import { AppError } from "../../utils/AppError";
 import { transporter } from "../../lib/nodemailer";
-import { ICreateAdminPayload, ICreateZoneManagerPayload } from "./admin-user.interface";
- 
+import type {
+  ICreateAdminPayload,
+  ICreateZoneManagerPayload,
+  IGetAllUsersQuery,
+} from "./admin-user.interface";
+import type { Prisma } from "../../../../generated/prisma/client";
 
 // Readable-ish random password: mix of upper/lower/digits/symbol,
 // satisfies the same strength rules as the reset-password validation.
@@ -102,7 +106,10 @@ const createAdmin = async (payload: ICreateAdminPayload) => {
 
   const existingUser = await prisma.user.findUnique({ where: { email } });
   if (existingUser) {
-    throw new AppError(httpStatus.BAD_REQUEST, "A user with this email already exists");
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "A user with this email already exists",
+    );
   }
 
   const tempPassword = generateTempPassword();
@@ -140,7 +147,10 @@ const createZoneManager = async (payload: ICreateZoneManagerPayload) => {
 
   const existingUser = await prisma.user.findUnique({ where: { email } });
   if (existingUser) {
-    throw new AppError(httpStatus.BAD_REQUEST, "A user with this email already exists");
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "A user with this email already exists",
+    );
   }
 
   const zone = await prisma.powerZone.findFirst({
@@ -181,7 +191,245 @@ const createZoneManager = async (payload: ICreateZoneManagerPayload) => {
   return { user: zoneManager, emailSent };
 };
 
+// GET ALL USERS
+
+const getAllUsers = async (query: IGetAllUsersQuery) => {
+  const page = query.page ?? 1;
+  const limit = query.limit ?? 10;
+  const skip = (page - 1) * limit;
+
+  const where: Prisma.UserWhereInput = {};
+
+  // Search
+
+  if (query.search) {
+    where.OR = [
+      { name: { contains: query.search, mode: "insensitive" } },
+      { email: { contains: query.search, mode: "insensitive" } },
+      { phone: { contains: query.search, mode: "insensitive" } },
+    ];
+  }
+
+  // Role filter
+
+  if (query.role) {
+    where.role = query.role;
+  }
+
+  // Status filter
+
+  if (query.status) {
+    where.status = query.status;
+  } else {
+    // By default deleted users won't appear in normal user list.
+    where.status = { not: UserStatus.DELETED };
+  }
+
+  // Sorting
+
+  const sortBy = query.sortBy ?? "createdAt";
+  const sortOrder = query.sortOrder ?? "desc";
+
+  const [users, total] = await Promise.all([
+    prisma.user.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { [sortBy]: sortOrder },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+        status: true,
+        isActive: true,
+        authProvider: true,
+        emailVerified: true,
+        emailVerifiedAt: true,
+        managedZoneId: true,
+        areaId: true,
+        technicianZoneId: true,
+        ImageUrl: true,
+        createdAt: true,
+        updatedAt: true,
+        deletedAt: true,
+      },
+    }),
+
+    prisma.user.count({ where }),
+  ]);
+
+  return {
+    data: users,
+    meta: {
+      page,
+      limit,
+      total,
+      totalPage: Math.ceil(total / limit),
+    },
+  };
+};
+
+// GET SINGLE USER
+
+const getUserById = async (userId: string) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      phone: true,
+      role: true,
+      status: true,
+      isActive: true,
+      authProvider: true,
+      emailVerified: true,
+      emailVerifiedAt: true,
+      managedZoneId: true,
+      areaId: true,
+      technicianZoneId: true,
+      ImageUrl: true,
+      createdAt: true,
+      updatedAt: true,
+      deletedAt: true,
+    },
+  });
+
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  return user;
+};
+
+// SUSPEND USER
+
+const suspendUser = async (userId: string, adminId: string) => {
+  if (userId === adminId) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "You cannot suspend your own account",
+    );
+  }
+
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  if (user.status === UserStatus.DELETED) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "Deleted user cannot be suspended",
+    );
+  }
+
+  if (user.status === UserStatus.SUSPENDED) {
+    throw new AppError(httpStatus.BAD_REQUEST, "User is already suspended");
+  }
+
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data: { status: UserStatus.SUSPENDED, isActive: false },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      status: true,
+      isActive: true,
+    },
+  });
+
+  return updatedUser;
+};
+
+// ACTIVATE USER
+
+const activateUser = async (userId: string) => {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  if (user.status === UserStatus.DELETED) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "Deleted user cannot be activated",
+    );
+  }
+
+  if (user.status === UserStatus.ACTIVE) {
+    throw new AppError(httpStatus.BAD_REQUEST, "User is already active");
+  }
+
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data: { status: UserStatus.ACTIVE, isActive: true },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      status: true,
+      isActive: true,
+    },
+  });
+
+  return updatedUser;
+};
+
+// SOFT DELETE USER
+
+const deleteUser = async (userId: string, adminId: string) => {
+  if (userId === adminId) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "You cannot delete your own account",
+    );
+  }
+
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  if (user.status === UserStatus.DELETED) {
+    throw new AppError(httpStatus.BAD_REQUEST, "User is already deleted");
+  }
+
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      status: UserStatus.DELETED,
+      isActive: false,
+      deletedAt: new Date(),
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      status: true,
+      isActive: true,
+      deletedAt: true,
+    },
+  });
+
+  return updatedUser;
+};
+
 export const AdminUserService = {
   createAdmin,
   createZoneManager,
+  getAllUsers,
+  getUserById,
+  suspendUser,
+  activateUser,
+  deleteUser,
 };

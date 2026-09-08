@@ -3,6 +3,7 @@ import httpStatus from "http-status";
 import { catchAsync } from "../../utils/catchAsync";
 import { sendResponse } from "../../utils/sendResponse";
 import { AdminUserService } from "./admin-user.service";
+import { AdminUserValidation } from "./admin-user.validation";
  
 
 const createAdmin = catchAsync(async (req: Request, res: Response) => {
@@ -31,7 +32,112 @@ const createZoneManager = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+
+// GET ALL USERS
+ 
+const getAllUsers = catchAsync(
+  async (req: Request, res: Response) => {
+    const parsedQuery =
+      AdminUserValidation.getAllUsersQuerySchema.parse(
+        req.query,
+      );
+
+    const result =
+      await AdminUserService.getAllUsers(parsedQuery);
+
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Users retrieved successfully",
+      data: result,
+    });
+  },
+);
+
+ 
+// GET SINGLE USER
+ 
+const getUserById = catchAsync(
+  async (req: Request, res: Response) => {
+    const result =
+      await AdminUserService.getUserById(
+        req.params.id as string,
+      );
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "User retrieved successfully",
+      data: result,
+    });
+  },
+);
+
+// ======================================================
+// SUSPEND USER
+// ======================================================
+const suspendUser = catchAsync(
+  async (req: Request, res: Response) => {
+    const requestUserId = req.user?.userId as string;
+    const result =
+      await AdminUserService.suspendUser(
+        req.params.id as string,
+        requestUserId,
+      );
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "User suspended successfully",
+      data: result,
+    });
+  },
+);
+
+// ======================================================
+// ACTIVATE USER
+// ======================================================
+const activateUser = catchAsync(
+  async (req: Request, res: Response) => {
+    const result =
+      await AdminUserService.activateUser(
+        req.params.id as string,
+      );
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "User activated successfully",
+      data: result,
+    });
+  },
+);
+
+// ======================================================
+// DELETE USER
+// ======================================================
+const deleteUser = catchAsync(
+  async (req: Request, res: Response) => {
+    const requestUserId = req.user?.userId as string;
+    const result =
+      await AdminUserService.deleteUser(
+        req.params.id as string,
+        requestUserId,
+      );
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "User deleted successfully",
+      data: result,
+    });
+  },
+);
+
+
+
 export const AdminUserController = {
   createAdmin,
   createZoneManager,
+  getAllUsers,
+  getUserById,
+  suspendUser,
+  activateUser,
+  deleteUser,
 };
