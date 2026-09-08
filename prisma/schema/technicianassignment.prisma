@@ -1,9 +1,13 @@
 model TechnicianAssignment {
-  id        String           @id @default(uuid())
-  status    AssignmentStatus @default(PENDING)
-  isPriority Boolean         @default(false)
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
+  id              String           @id @default(uuid())
+  status          AssignmentStatus @default(PENDING)
+  isPriority      Boolean          @default(false)
+  rejectionReason String?
+  acceptedAt      DateTime?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
 
   outageId String
   outage   Outage @relation(fields: [outageId], references: [id])
@@ -11,7 +15,6 @@ model TechnicianAssignment {
   technicianId String
   technician   User   @relation("AssignedTechnician", fields: [technicianId], references: [id])
 
-  // Zone Manager assigns (from their own zone's technicians)
   assignedById String
   assignedBy   User   @relation("AssignedBy", fields: [assignedById], references: [id])
 

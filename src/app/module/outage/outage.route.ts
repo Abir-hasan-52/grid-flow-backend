@@ -16,46 +16,43 @@ outageRouter.post(
 );
 
 outageRouter.post(
-  "/",
+  "/manual",
   auth(Role.ADMIN, Role.ZONE_MANAGER),
   validateRequest(OutageValidation.createManualOutageSchema),
   OutageController.createManualOutage,
 );
 
 outageRouter.get(
-  "/",
+  "/all-reports",
   auth(Role.ADMIN, Role.ZONE_MANAGER),
   OutageController.getAllOutages,
 );
 
 outageRouter.get(
-  "/:id",
+  "/single-outage/:id",
   auth(Role.ADMIN, Role.ZONE_MANAGER),
   OutageController.getOutageById,
 );
 
 outageRouter.patch(
-  "/:id/verify",
+  "/reports/:id/verify",
   auth(Role.ADMIN, Role.ZONE_MANAGER),
   OutageController.verifyOutage,
 );
 
 outageRouter.patch(
-  "/:id/close",
+  "/close/:id",
   auth(Role.ADMIN, Role.ZONE_MANAGER),
   OutageController.closeOutage,
 );
 
 // Mounted at /api/v1/my-reports
-const myReportsRouter = Router();
+// const myReportsRouter = Router();
 
-myReportsRouter.get(
-  "/",
+outageRouter.get(
+  "/my-reports",
   auth(Role.CUSTOMER),
   OutageController.getMyReports,
 );
 
-export const OutageRoutes = {
-  outageRouter,
-  myReportsRouter,
-};
+export const OutageRoutes = outageRouter;

@@ -22,6 +22,8 @@ import { TechnicianApplicationRoutes } from "./app/module/technician-application
 import { AdminUserRoutes } from "./app/module/admin-user/admin-user.route";
 import { ScheduleRoutes } from "./app/module/schedule/schedule.route";
 import { OutageRoutes } from "./app/module/outage/outage.route";
+import { PriorityRestorationRoute } from "./app/module/priority-restoration/priority-restoration.route";
+import { TechnicianAssignmentRoutes } from "./app/module/technician-assignment/technician-assignment.route";
 
 const app: Application = express();
 
@@ -62,8 +64,17 @@ app.use("/api/v1/admin/users", AdminUserRoutes);
 // schedule routes
 app.use("/api/v1/load-shedding-schedules", ScheduleRoutes);
 // outage routes
-app.use("/api/v1/outages", OutageRoutes.outageRouter);
-app.use("/api/v1/my-reports", OutageRoutes.myReportsRouter);
+app.use("/api/v1/outages", OutageRoutes);
+// app.use("/api/v1/my-reports", OutageRoutes.myReportsRouter);
+
+// priority restoration routes
+app.use("/api/v1/priority-restoration", PriorityRestorationRoute);
+
+// technician assignment routes
+app.use("/api/v1/outages", TechnicianAssignmentRoutes.outageAssignRouter);
+app.use("/api/v1/assignments", TechnicianAssignmentRoutes.assignmentRouter);
+app.use("/api/v1/my-assignments", TechnicianAssignmentRoutes.myAssignmentsRouter);
+
 // Basic route
 app.get("/", async (req: Request, res: Response) => {
   res.status(httpStatus.OK).json({

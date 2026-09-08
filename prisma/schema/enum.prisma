@@ -43,17 +43,15 @@ enum AssignmentStatus {
 }
 
 enum PaymentStatus {
-    PENDING
-    VERIFIED
-    FAILED
-    REFUNDED
+  PENDING
+  VERIFIED
+  FAILED
+  CANCELLED
+  REFUNDED
 }
 
 enum PaymentMethod {
     BKASH
-    NAGAD
-    ROCKET
-    CARD
 }
 
 enum PriorityRequestStatus {
@@ -70,6 +68,7 @@ enum EmailType {
     PASSWORD_RESET
     ACCOUNT
     GENERAL
+    ANNOUNCEMENT
 }
 
 enum EmailStatus {

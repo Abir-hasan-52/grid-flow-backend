@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>New Assignment</title>
+</head>
+<body style="margin:0; padding:0; background-color:#f4f6f8; font-family: Arial, Helvetica, sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f6f8; padding:32px 0;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="500" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+          <tr>
+            <td style="background-color:#1e3a5f; padding:24px 32px;">
+              <h1 style="margin:0; color:#ffffff; font-size:20px;">GridFlow</h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px;">
+              <h2 style="margin-top:0; color:#1a1a1a; font-size:18px;">You've been assigned a repair job</h2>
+              <p style="color:#444444; font-size:14px; line-height:1.6;">
+                Hi <%= technicianName %>,
+              </p>
+              <p style="color:#444444; font-size:14px; line-height:1.6;">
+                You have been assigned to an outage at <strong><%= feederName %></strong> feeder.
+                <% if (isPriority) { %>
+                <br /><strong style="color:#c0392b;">This is a priority job -- please attend as soon as possible.</strong>
+                <% } %>
+              </p>
+              <p style="color:#444444; font-size:14px; line-height:1.6;">
+                Please log in to accept or reject this assignment.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color:#fafafa; padding:16px 32px; text-align:center;">
+              <p style="margin:0; color:#aaaaaa; font-size:12px;">&copy; <%= new Date().getFullYear() %> GridFlow. All rights reserved.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

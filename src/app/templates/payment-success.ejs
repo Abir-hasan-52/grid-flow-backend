@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Priority Restoration Confirmed</title>
+</head>
+<body style="margin:0; padding:0; background-color:#f4f6f8; font-family: Arial, Helvetica, sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f6f8; padding:32px 0;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="500" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+          <tr>
+            <td style="background-color:#1f6f3f; padding:24px 32px;">
+              <h1 style="margin:0; color:#ffffff; font-size:20px;">GridFlow</h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px;">
+              <h2 style="margin-top:0; color:#1a1a1a; font-size:18px;">Priority restoration confirmed</h2>
+              <p style="color:#444444; font-size:14px; line-height:1.6;">
+                Hi <%= name %>,
+              </p>
+              <p style="color:#444444; font-size:14px; line-height:1.6;">
+                Your payment of <strong><%= amount %> BDT</strong> was successful. Your outage has been marked as
+                priority, and a technician will attend to it with higher urgency.
+              </p>
+              <p style="color:#888888; font-size:13px; line-height:1.6;">
+                Transaction ID: <%= transactionId %>
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color:#fafafa; padding:16px 32px; text-align:center;">
+              <p style="margin:0; color:#aaaaaa; font-size:12px;">&copy; <%= new Date().getFullYear() %> GridFlow. All rights reserved.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
