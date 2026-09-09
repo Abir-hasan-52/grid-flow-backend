@@ -4,6 +4,7 @@ import { auth } from "../../middleware/checkAuth";
 import { validateRequest } from "../../middleware/validateRequest";
 import { PriorityRestorationController } from "./priority-restoration.controller";
 import { PriorityRestorationValidation } from "./priority-restoration.validation";
+import { paymentLimiter } from "../../lib/ratelimiter";
 
 const router = Router();
 
@@ -12,6 +13,7 @@ const router = Router();
 router.post(
   "/create",
   auth(Role.CUSTOMER),
+    paymentLimiter,
   validateRequest(PriorityRestorationValidation.createPriorityRequestSchema),
   PriorityRestorationController.createPriorityRequest,
 );

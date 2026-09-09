@@ -5,23 +5,24 @@ import { Role } from "../../../../generated/prisma/enums";
 import { AuthController } from "./auth.controller";
 import { validateRequest } from "../../middleware/validateRequest";
 import { AuthValidation } from "./auth.validation";
+import { authLimiter } from "../../lib/ratelimiter";
 
 const router = Router();
 
 router.post(
-  "/register",
+  "/register",authLimiter,
   validateRequest(AuthValidation.registerCustomerValidation),
   AuthController.registerCustomer,
 );
 
 router.post(
-  "/login",
+  "/login",authLimiter,
   validateRequest(AuthValidation.loginValidation),
   AuthController.loginUser,
 );
 
 router.post(
-  "/verify-email",
+  "/verify-email",authLimiter,
   validateRequest(AuthValidation.verifyCustomerEmailValidation),
   AuthController.verifyCustomerEmail,
 );
@@ -35,16 +36,16 @@ router.get(
 router.post("/refresh-token", AuthController.refreshToken);
 router.post("/logout", auth(Role.ADMIN, Role.CUSTOMER, Role.TECHNICIAN, Role.ZONE_MANAGER), AuthController.logoutUser);
 
-router.post("/google", AuthController.googleLogin);
+router.post("/google",authLimiter, AuthController.googleLogin);
 
 router.post(
-  "/forgot-password",
+  "/forgot-password",authLimiter,
   validateRequest(AuthValidation.forgotCustomerValidation),
   AuthController.forgotPassword,
 );
 
 router.post(
-  "/reset-password",
+  "/reset-password",authLimiter,
   validateRequest(AuthValidation.resetCustomerValidation),
   AuthController.resetPassword,
 );

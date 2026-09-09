@@ -25,9 +25,11 @@ import { OutageRoutes } from "./app/module/outage/outage.route";
 import { PriorityRestorationRoute } from "./app/module/priority-restoration/priority-restoration.route";
 import { TechnicianAssignmentRoutes } from "./app/module/technician-assignment/technician-assignment.route";
 import { DashboardRoutes } from "./app/module/dashboard/dashboard.route";
+import { generalLimiter } from "./app/lib/ratelimiter";
+import helmet from "helmet";
 
 const app: Application = express();
-
+app.use(helmet());
 app.use(
   cors({
     origin: config.frontend_url,
@@ -41,6 +43,9 @@ app.use(express.urlencoded({ extended: true }));
 // Middleware to parse JSON bodies
 app.use(express.json());
 app.use(cookieParser());
+
+// Rate limiters
+app.use("/api/v1", generalLimiter);
 
 app.use("/api/v1/auth", AuthRoutes);
 app.use("/api/v1/zone", ZoneRoutes);
