@@ -6,13 +6,14 @@ Built as part of the **Assignment 6: Load Shedding & Power Outage Management Pla
 
 ---
 
+
 ## 🔗 Quick Links
 
 | Resource | Link |
 |---|---|
-| 🚀 Live API | `<!-- TODO: paste your deployed URL, e.g. https://gridflow-backend.onrender.com -->` |
-| 📮 Postman Collection | `<!-- TODO: paste your published Postman collection link -->` |
-| 📂 Repository | `<!-- TODO: paste your GitHub repo link -->` |
+| 🚀 Live API | `https://grid-flow-backend.vercel.app` |
+| 📮 Postman Collection | `https://documenter.getpostman.com/view/54800967/2sBYAxQVDi` |
+| 📂 Repository | `https://github.com/Abir-hasan-52/grid-flow-backend` |
 
 ---
 
@@ -22,10 +23,10 @@ Built as part of the **Assignment 6: Load Shedding & Power Outage Management Pla
 
 | Role | Email | Password |
 |---|---|---|
-| Admin | `<!-- TODO: your ADMIN_EMAIL from .env -->` | `<!-- TODO: your ADMIN_PASSWORD -->` |
-| Zone Manager | `zonemanager@gridflow.demo` | `Demo@1234` |
-| Technician | `tech1@gridflow.demo` | `Demo@1234` |
-| Customer | `customer@gridflow.demo` | `Demo@1234` |
+| Admin | `admin@gmail.com` | `admin123` |
+| Zone Manager | `zone_manager@gmail.com` | `zone_manager123` |
+| Technician | `technician_one@gmail.com` | `technician_one123` |
+| Customer | `customer1@gmail.com` | `customer123` |
 
 ---
 
@@ -114,7 +115,7 @@ GridFlow models a real power-authority hierarchy — **Zone → Substation → F
 | Payments | bKash Tokenized Checkout |
 | Scheduling | node-cron |
 | API Documentation | Postman |
-| Deployment | `<!-- TODO: Render / Vercel -->` |
+| Deployment | `Vercel` |
 
 ---
 
@@ -172,7 +173,7 @@ NODE_ENV=development
 PORT=5000
 DATABASE_URL="postgres://..."
 FRONTEND_URL=http://localhost:3000
-APP_URL=http://localhost:5000
+APP_URL=https://grid-flow-backend.vercel.app
 
 # JWT
 JWT_ACCESS_SECRET=
@@ -256,17 +257,11 @@ prisma/
 └── schema/              # Multi-file Prisma schema (17 models)
 ```
 
----
-
-## 🎥 Video Walkthrough
-
-`<!-- TODO: brief note on what the video covers, plus the link from Quick Links above -->`
-
----
+ 
 
 ## 📝 License
 
-`<!-- TODO: e.g. MIT, or "Academic project — not licensed for reuse" -->`
+` "Academic project — not licensed for reuse"`
 
 ---
 
@@ -274,4 +269,5 @@ prisma/
 
 **Abir Hasan**
 Software Engineering, Daffodil International University
-`<!-- TODO: add your GitHub/LinkedIn/email if you want -->`
+<a href="https://www.linkedin.com/in/ah-abir">LinkedIn</a> •
+<a href="mailto:abirhasan5208@gmail.com">Email</a>
