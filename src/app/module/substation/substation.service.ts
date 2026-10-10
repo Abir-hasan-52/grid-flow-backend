@@ -46,16 +46,17 @@ const createSubstation = async (payload: ICreateSubstationPayload) => {
 	return substation;
 };
 
+ 
 const getAllSubstations = async (query: IGetAllSubstationsQuery) => {
 	const {
-		page = 1,
-		limit = 10,
 		search,
 		powerZoneId,
 		sortBy = "createdAt",
 		sortOrder = "desc",
 	} = query;
 
+	const page = Math.max(Number(query.page) || 1, 1);
+	const limit = Math.max(Number(query.limit) || 10, 1);
 	const skip = (page - 1) * limit;
 
 	const where = {
@@ -66,9 +67,7 @@ const getAllSubstations = async (query: IGetAllSubstationsQuery) => {
 				mode: "insensitive" as const,
 			},
 		}),
-		...(powerZoneId && {
-			powerZoneId,
-		}),
+		...(powerZoneId && { powerZoneId }),
 	};
 
 	const [substations, total] = await Promise.all([
@@ -76,21 +75,10 @@ const getAllSubstations = async (query: IGetAllSubstationsQuery) => {
 			where,
 			skip,
 			take: limit,
-			orderBy: {
-				[sortBy]: sortOrder,
-			},
+			orderBy: { [sortBy]: sortOrder },
 			include: {
-				powerZone: {
-					select: {
-						id: true,
-						name: true,
-					},
-				},
-				_count: {
-					select: {
-						feeders: true,
-					},
-				},
+				powerZone: { select: { id: true, name: true } },
+				_count: { select: { feeders: true } },
 			},
 		}),
 		prisma.substation.count({ where }),
@@ -106,7 +94,6 @@ const getAllSubstations = async (query: IGetAllSubstationsQuery) => {
 		data: substations,
 	};
 };
-
 const getSingleSubstation = async (id: string) => {
 	const substation = await prisma.substation.findFirst({
 		where: {

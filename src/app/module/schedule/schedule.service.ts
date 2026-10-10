@@ -203,8 +203,8 @@ const getAllSchedules = async (
   requestUser: IRequestUser,
 ) => {
   const {
-    page = 1,
-    limit = 10,
+    // page = 1,
+    // limit = 10,
     search,
     status,
     powerZoneId,
@@ -212,6 +212,8 @@ const getAllSchedules = async (
     sortOrder = "desc",
   } = query;
 
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
   const skip = (page - 1) * limit;
 
   let zoneScope: { powerZoneId?: string } = {};

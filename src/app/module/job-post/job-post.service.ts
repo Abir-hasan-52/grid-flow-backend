@@ -41,12 +41,14 @@ const createJobPost = async (
 
 const getAllPublishedJobPosts = async (query: IGetAllJobPostsQuery) => {
   const {
-    page = 1,
-    limit = 10,
+    // page = 1,
+    // limit = 10,
     search,
     sortBy = "createdAt",
     sortOrder = "desc",
   } = query;
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
 
   const skip = (page - 1) * limit;
 
@@ -103,13 +105,15 @@ const getPublishedJobPostById = async (id: string) => {
 
 const getAllJobPostsAdmin = async (query: IGetAllJobPostsAdminQuery) => {
   const {
-    page = 1,
-    limit = 10,
+    // page = 1,
+    // limit = 10,
     search,
     status,
     sortBy = "createdAt",
     sortOrder = "desc",
   } = query;
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
 
   const skip = (page - 1) * limit;
 

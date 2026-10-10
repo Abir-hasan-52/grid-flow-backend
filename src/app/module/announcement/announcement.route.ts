@@ -45,4 +45,17 @@ router.delete(
   AnnouncementController.deleteAnnouncement,
 );
 
+// Public routes-->
+router.get(
+  "/public-announcements",
+  auth(Role.ADMIN, Role.ZONE_MANAGER, Role.CUSTOMER, Role.TECHNICIAN),
+  AnnouncementController.getAllPublicAnnouncements,
+);
+
+router.get(
+  "/public-announcements/:id",
+  auth(Role.ADMIN, Role.ZONE_MANAGER, Role.CUSTOMER, Role.TECHNICIAN),
+  AnnouncementController.getAllPublicAnnouncementById,
+);
+
 export const AnnouncementRoutes = router;

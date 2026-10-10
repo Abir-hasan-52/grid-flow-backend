@@ -15,6 +15,7 @@ model User {
   googleId        String?      @unique
   emailVerified   Boolean      @default(false)
   emailVerifiedAt DateTime?
+  canChangePassword Boolean?      @default(true)
 
   // ZONE_MANAGER only: zone(s) this user manages
   managedZoneId String?

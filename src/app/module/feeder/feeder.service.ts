@@ -47,65 +47,66 @@ const createFeeder = async (payload: ICreateFeederPayload) => {
 };
 
 const getAllFeeders = async (query: IGetAllFeedersQuery) => {
-	const {
-		page = 1,
-		limit = 10,
-		search,
-		substationId,
-		sortBy = "createdAt",
-		sortOrder = "desc",
-	} = query;
+  const {
+    search,
+    substationId,
+    sortBy = "createdAt",
+    sortOrder = "desc",
+  } = query;
 
-	const skip = (page - 1) * limit;
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
 
-	const where = {
-		deletedAt: null,
-		...(search && {
-			name: {
-				contains: search,
-				mode: "insensitive" as const,
-			},
-		}),
-		...(substationId && {
-			substationId,
-		}),
-	};
+  const skip = (page - 1) * limit;
 
-	const [feeders, total] = await Promise.all([
-		prisma.feeder.findMany({
-			where,
-			skip,
-			take: limit,
-			orderBy: {
-				[sortBy]: sortOrder,
-			},
-			include: {
-				substation: {
-					select: {
-						id: true,
-						name: true,
-					},
-				},
-				_count: {
-					select: {
-						areas: true,
-						outages: true,
-					},
-				},
-			},
-		}),
-		prisma.feeder.count({ where }),
-	]);
+  const where = {
+    deletedAt: null,
+    ...(search && {
+      name: {
+        contains: search,
+        mode: "insensitive" as const,
+      },
+    }),
+    ...(substationId && {
+      substationId,
+    }),
+  };
 
-	return {
-		meta: {
-			page,
-			limit,
-			total,
-			totalPages: Math.ceil(total / limit),
-		},
-		data: feeders,
-	};
+  const [feeders, total] = await Promise.all([
+    prisma.feeder.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: {
+        [sortBy]: sortOrder,
+      },
+      include: {
+        substation: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        _count: {
+          select: {
+            areas: true,
+            outages: true,
+          },
+        },
+      },
+    }),
+    prisma.feeder.count({ where }),
+  ]);
+
+  return {
+    meta: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+    data: feeders,
+  };
 };
 
 const getSingleFeeder = async (id: string) => {

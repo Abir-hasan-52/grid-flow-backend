@@ -202,7 +202,9 @@ const reportOutage = async (
 };
 
 const getMyReports = async (customerId: string, query: IGetMyReportsQuery) => {
-  const { page = 1, limit = 10 } = query;
+  
+  const page=Number(query.page) || 1;
+  const limit=Number(query.limit) || 10;
   const skip = (page - 1) * limit;
 
   const where = { customerId };
@@ -233,8 +235,7 @@ const getAllOutages = async (
   requestUser: IRequestUser,
 ) => {
   const {
-    page = 1,
-    limit = 10,
+    
     search,
     status,
     feederId,
@@ -242,6 +243,8 @@ const getAllOutages = async (
     sortBy = "createdAt",
     sortOrder = "desc",
   } = query;
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
 
   const skip = (page - 1) * limit;
 

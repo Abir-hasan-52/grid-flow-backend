@@ -10,8 +10,7 @@ import { uploadImage } from "../../lib/multer";
 
 const router = Router();
 
-// fix: was router.get(...) -- a GET request updating data breaks REST
-// conventions and is a semantic bug. This must be PATCH.
+
 router.patch(
   "/me",
   auth(Role.ADMIN, Role.CUSTOMER, Role.TECHNICIAN, Role.ZONE_MANAGER),

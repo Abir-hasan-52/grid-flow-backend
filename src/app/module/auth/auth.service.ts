@@ -540,14 +540,25 @@ const forgotPassword = async (payload: IForgotPasswordPayload) => {
   if (isUserExist.status === UserStatus.SUSPENDED) {
     throw new AppError(httpStatus.FORBIDDEN, "User is suspended");
   }
+
+  // fix: block DELETED status directly -- deletedAt !== null && status === DELETED
+  // was a fragile double-condition; status alone already tells us this.
+  if (isUserExist.status === UserStatus.DELETED) {
+    throw new AppError(httpStatus.FORBIDDEN, "User is deleted");
+  }
+
+  // fix: seed/demo accounts (canChangePassword = false) must never be able to
+  // trigger a password change flow -- block it here, BEFORE sending any OTP
+  // email, so we don't waste an email on an account that can never use it.
+  if (!isUserExist.canChangePassword) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "This account's password cannot be changed",
+    );
+  }
+
   if (!isUserExist.emailVerified) {
     throw new AppError(httpStatus.FORBIDDEN, "User email is not verified");
-  }
-  if (
-    isUserExist.deletedAt !== null &&
-    isUserExist.status === UserStatus.DELETED
-  ) {
-    throw new AppError(httpStatus.FORBIDDEN, "User is deleted");
   }
   if (
     isUserExist.googleId &&
@@ -640,14 +651,23 @@ const resetPassword = async (payload: IResetPasswordPayload) => {
   if (isUserExist.status === UserStatus.SUSPENDED) {
     throw new AppError(httpStatus.FORBIDDEN, "User is suspended");
   }
+
+  // fix: same simplification as forgotPassword
+  if (isUserExist.status === UserStatus.DELETED) {
+    throw new AppError(httpStatus.FORBIDDEN, "User is deleted");
+  }
+
+  // fix: defense in depth -- re-check canChangePassword here too, in case it
+  // was flipped to false AFTER the OTP was already issued via forgotPassword.
+  if (!isUserExist.canChangePassword) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "This account's password cannot be changed",
+    );
+  }
+
   if (!isUserExist.emailVerified) {
     throw new AppError(httpStatus.FORBIDDEN, "User email is not verified");
-  }
-  if (
-    isUserExist.deletedAt !== null &&
-    isUserExist.status === UserStatus.DELETED
-  ) {
-    throw new AppError(httpStatus.FORBIDDEN, "User is deleted");
   }
   if (
     isUserExist.googleId &&

@@ -18,6 +18,7 @@ import type {
 } from "./announcement.interface";
 import type { IRequestUser } from "../auth/auth.interface";
 import { transporter } from "../../lib/nodemailer";
+import { getViewerZoneId } from "../../../helper/announcement.service";
 
 const createAnnouncement = async (
   payload: ICreateAnnouncement,
@@ -71,8 +72,8 @@ const getAnnouncements = async (
   requestUser: IRequestUser,
 ) => {
   const {
-    page = 1,
-    limit = 10,
+    // page = 1,
+    // limit = 10,
     search,
     type,
     status,
@@ -80,6 +81,9 @@ const getAnnouncements = async (
     sortBy = "createdAt",
     sortOrder = "desc",
   } = query;
+
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
 
   const skip = (page - 1) * limit;
 
@@ -315,6 +319,151 @@ const deleteAnnouncement = async (id: string) => {
   return deleted;
 };
 
+const getAllAnnouncements = async (
+  query: IGetAllAnnouncementsQuery,
+  requestUser: IRequestUser,
+) => {
+  const {
+    // page = 1,
+    // limit = 10,
+    search,
+    type,
+    status,
+    powerZoneId,
+    sortBy = "createdAt",
+    sortOrder = "desc",
+  } = query;
+
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
+
+  const skip = (page - 1) * limit;
+  
+
+  // CUSTOMER / TECHNICIAN -> viewer mode: PUBLISHED only, global + own zone
+  if (requestUser.role === Role.CUSTOMER || requestUser.role === Role.TECHNICIAN) {
+    const viewerZoneId = await getViewerZoneId(requestUser);
+
+    const where = {
+      deletedAt: null,
+      status: AnnouncementStatus.PUBLISHED,
+      ...(type && { type }),
+      ...(search && {
+        title: { contains: search, mode: "insensitive" as const },
+      }),
+      OR: [
+        { powerZoneId: null },               // global announcements
+        ...(viewerZoneId ? [{ powerZoneId: viewerZoneId }] : []),
+      ],
+    };
+
+    const [announcements, total] = await Promise.all([
+      prisma.announcement.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { [sortBy]: sortOrder },
+        include: {
+          powerZone: { select: { id: true, name: true } },
+        },
+      }),
+      prisma.announcement.count({ where }),
+    ]);
+
+    return {
+      meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+      data: announcements,
+    };
+  }
+
+  // ADMIN / ZONE_MANAGER -> management mode (existing logic, unchanged)
+  let zoneScope: { powerZoneId?: string } = {};
+
+  if (requestUser.role === Role.ZONE_MANAGER) {
+    const zoneManager = await prisma.user.findFirst({
+      where: { id: requestUser.userId, deletedAt: null },
+    });
+    zoneScope = { powerZoneId: zoneManager?.managedZoneId ?? "__none__" };
+  } else if (powerZoneId) {
+    zoneScope = { powerZoneId };
+  }
+
+  const where = {
+    deletedAt: null,
+    ...zoneScope,
+    ...(type && { type }),
+    ...(status && { status }),
+    ...(search && {
+      title: { contains: search, mode: "insensitive" as const },
+    }),
+  };
+
+  const [announcements, total] = await Promise.all([
+    prisma.announcement.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { [sortBy]: sortOrder },
+      include: {
+        powerZone: { select: { id: true, name: true } },
+        createdBy: { select: { id: true, name: true } },
+      },
+    }),
+    prisma.announcement.count({ where }),
+  ]);
+
+  return {
+    meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    data: announcements,
+  };
+};
+
+
+const getAllAnnouncementById = async (id: string, requestUser: IRequestUser) => {
+  // CUSTOMER / TECHNICIAN -> viewer mode
+  if (requestUser.role === Role.CUSTOMER || requestUser.role === Role.TECHNICIAN) {
+    const viewerZoneId = await getViewerZoneId(requestUser);
+
+    const announcement = await prisma.announcement.findFirst({
+      where: {
+        id,
+        deletedAt: null,
+        status: AnnouncementStatus.PUBLISHED,
+        OR: [
+          { powerZoneId: null },
+          ...(viewerZoneId ? [{ powerZoneId: viewerZoneId }] : []),
+        ],
+      },
+      include: {
+        powerZone: { select: { id: true, name: true } },
+      },
+    });
+
+    if (!announcement) {
+      throw new AppError(httpStatus.NOT_FOUND, "Announcement not found");
+    }
+
+    return announcement;
+  }
+
+  // ADMIN / ZONE_MANAGER -> management mode (existing logic, unchanged)
+  const announcement = await prisma.announcement.findFirst({
+    where: { id, deletedAt: null },
+    include: {
+      powerZone: { select: { id: true, name: true } },
+      createdBy: { select: { id: true, name: true } },
+    },
+  });
+
+  if (!announcement) {
+    throw new AppError(httpStatus.NOT_FOUND, "Announcement not found");
+  }
+
+  await assertZoneManagerOwnsAnnouncement(announcement.powerZoneId, requestUser);
+
+  return announcement;
+};
+
 export const AnnouncementService = {
   createAnnouncement,
   getAnnouncements,
@@ -322,4 +471,6 @@ export const AnnouncementService = {
   updateAnnouncement,
   publishAnnouncement,
   deleteAnnouncement,
+  getAllAnnouncements,
+  getAllAnnouncementById
 };

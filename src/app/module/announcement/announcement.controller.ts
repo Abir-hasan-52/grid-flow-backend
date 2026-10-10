@@ -81,6 +81,33 @@ const deleteAnnouncement = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+
+
+const getAllPublicAnnouncements = catchAsync(async (req: Request, res: Response) => {
+  const requestUser = req.user as unknown as IRequestUser;
+  const result = await AnnouncementService.getAllAnnouncements(req.query, requestUser);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Announcements fetched successfully",
+    data: result.data,
+    meta: result.meta,
+  });
+});
+
+const getAllPublicAnnouncementById = catchAsync(async (req: Request, res: Response) => {
+  const requestUser = req.user as unknown as IRequestUser;
+  const result = await AnnouncementService.getAllAnnouncementById(req.params.id as string, requestUser);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Announcement fetched successfully",
+    data: result,
+  });
+});
+
 export const AnnouncementController = {
   createAnnouncement,
   getAnnouncements,
@@ -88,4 +115,6 @@ export const AnnouncementController = {
   updateAnnouncement,
   publishAnnouncement,
   deleteAnnouncement,
+  getAllPublicAnnouncements,
+  getAllPublicAnnouncementById,
 };

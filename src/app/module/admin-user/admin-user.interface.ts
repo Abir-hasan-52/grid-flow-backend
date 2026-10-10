@@ -12,15 +12,7 @@ export interface ICreateZoneManagerPayload {
   managedZoneId: string;
 }
 
-// export interface IGetAllUsersQuery {
-//   page?: number;
-//   limit?: number;
-//   search?: string;
-//   role?: Role;
-//   status?: UserStatus;
-//   sortBy?: string;
-//   sortOrder?: "asc" | "desc";
-// }
+ 
 export type IGetAllUsersQuery = z.infer<
   typeof AdminUserValidation.getAllUsersQuerySchema
 >;

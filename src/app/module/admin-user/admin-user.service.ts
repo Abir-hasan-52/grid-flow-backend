@@ -254,6 +254,7 @@ const getAllUsers = async (query: IGetAllUsersQuery) => {
         createdAt: true,
         updatedAt: true,
         deletedAt: true,
+        canChangePassword: true,
       },
     }),
 
@@ -294,6 +295,7 @@ const getUserById = async (userId: string) => {
       createdAt: true,
       updatedAt: true,
       deletedAt: true,
+      canChangePassword: true,
     },
   });
 

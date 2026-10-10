@@ -37,6 +37,7 @@ export const seedAdmin = async () => {
 				role: Role.ADMIN,
 				emailVerified: true,
 				emailVerifiedAt: new Date(),
+				canChangePassword: false,
 			},
 		});
 		console.log("Admin Created", adminUser);
@@ -134,6 +135,7 @@ export const seedDemoUsers = async () => {
 			managedZoneId: zone.id,
 			emailVerified: true,
 			emailVerifiedAt: new Date(),
+			canChangePassword: false,
 		},
 	});
 
@@ -162,6 +164,7 @@ export const seedDemoUsers = async () => {
 				role: Role.TECHNICIAN,
 				emailVerified: true,
 				emailVerifiedAt: new Date(),
+				canChangePassword: false,
 			},
 			{
 				name: technicianTwoName,
@@ -170,6 +173,7 @@ export const seedDemoUsers = async () => {
 				role: Role.TECHNICIAN,
 				emailVerified: true,
 				emailVerifiedAt: new Date(),
+				canChangePassword: false,
 			},
 		],
 	});
@@ -191,6 +195,7 @@ export const seedDemoUsers = async () => {
 			areaId: area.id,
 			emailVerified: true,
 			emailVerifiedAt: new Date(),
+			canChangePassword: false,
 		},
 	});
 
